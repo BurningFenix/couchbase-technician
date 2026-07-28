@@ -1,0 +1,2232 @@
+{
+  "_readme": "Seed data for FieldCopilot. Load on first launch if the DB is empty. IMPORTANT: do NOT include embeddings here - the app must generate manualChunks[].embedding on seed using the SAME on-device model (NLContextualEmbedding) it uses for live query embeddings, so dimensions match. assetModel on each chunk links it to assets[].model for hybrid (filtered) vector search. All docs sync under the 'technicians' channel (assigned by the Capella access-control function, so no channel field is needed here).",
+  "assets": [
+    {
+      "id": "asset::A-204",
+      "assetTag": "A-204",
+      "name": "Rooftop Chiller - North Plant",
+      "model": "AeroCool AC-5000",
+      "location": "Building 3, Roof, Zone N",
+      "status": "operational",
+      "specs": {
+        "type": "air-cooled chiller",
+        "capacityTons": 50,
+        "refrigerant": "R-410A",
+        "voltage": "460V 3-phase",
+        "installedDate": "2021-04-12"
+      },
+      "serial": "AC5-2021-0473",
+      "runtimeHours": 4210,
+      "cycles": 18940,
+      "lastService": "Jun 2"
+    },
+    {
+      "id": "asset::B-110",
+      "assetTag": "B-110",
+      "name": "Rooftop AC Unit - Warehouse",
+      "model": "ThermaFlow RTU-20",
+      "location": "Building 1, Roof, Bay 4",
+      "status": "needs-attention",
+      "specs": {
+        "type": "packaged rooftop unit",
+        "capacityTons": 20,
+        "refrigerant": "R-410A",
+        "voltage": "208V 3-phase",
+        "installedDate": "2019-08-30"
+      },
+      "serial": "RTU20-2019-1180",
+      "runtimeHours": 6880,
+      "cycles": 31205,
+      "lastService": "Apr 18"
+    },
+    {
+      "id": "asset::C-302",
+      "assetTag": "C-302",
+      "name": "Air Handler - Office Wing",
+      "model": "VentMax AHU-8",
+      "location": "Building 2, Mechanical Room 2B",
+      "status": "operational",
+      "specs": {
+        "type": "air handling unit",
+        "cfm": 8000,
+        "voltage": "208V 1-phase",
+        "installedDate": "2022-11-05"
+      },
+      "serial": "AHU8-2022-0302",
+      "runtimeHours": 2540,
+      "cycles": 9860,
+      "lastService": "Jul 17"
+    }
+  ],
+  "manualChunks": [
+    {
+      "id": "chunk::ac5000::mount-torque",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.3 Compressor Mounting",
+      "page": 42,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Tighten the compressor mounting bolts to 35 ft-lb (47 N·m), working in a cross pattern so the load seats evenly. Come back and re-torque them after the first 50 operating hours. Whenever you remount a compressor, put in fresh vibration isolation grommets. Don't reuse the old compressed ones, since they'll pass extra vibration straight into the frame."
+    },
+    {
+      "id": "chunk::ac5000::refrigerant-charge",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.1 Refrigerant Charging",
+      "page": 51,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The AC-5000 leaves the factory with an 18 lb charge of R-410A. When you recharge, weigh the charge in rather than trusting the sight glass by itself. You're aiming for 10-12°F of subcooling at design conditions. Keep in mind that overcharging pushes head pressure up and can trip the high-pressure switch at 610 psig."
+    },
+    {
+      "id": "chunk::ac5000::hp-switch",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "8.2 Safety Controls",
+      "page": 73,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The high-pressure switch opens at 610 psig and has to be reset by hand. The low-pressure switch opens at 50 psig, resets on its own, and holds a 5 minute anti-short-cycle timer. If the high-pressure switch keeps tripping, it's usually a dirty condenser coil, a dead condenser fan, or an overcharge."
+    },
+    {
+      "id": "chunk::ac5000::condenser-clean",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.4 Condenser Coil Maintenance",
+      "page": 33,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Clean the condenser coil every quarter with a low-pressure coil cleaner, rinsing from the inside out. Keep your water pressure under 600 psi, otherwise you'll bend the fins. If any fins do get bent, straighten them with a fin comb sized for 12 fins per inch."
+    },
+    {
+      "id": "chunk::ac5000::oil",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.5 Compressor Oil",
+      "page": 46,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Only use POE oil (polyolester) ISO 32 in the AC-5000 scroll compressor. Mineral oil won't work with R-410A systems. With the compressor running, the oil level should sit between the two sight-glass marks."
+    },
+    {
+      "id": "chunk::ac5000::startup",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "3.1 Startup Procedure",
+      "page": 19,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Before the very first start, check phase rotation with a phase meter. If rotation is reversed, the scroll compressor spins backwards and it'll be ruined within minutes. When ambient temperatures are below 50°F, run the crankcase heater for at least 8 hours before you start the unit."
+    },
+    {
+      "id": "chunk::ac5000::filter-drier",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.4 Filter Drier",
+      "page": 58,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Any time you open the refrigerant circuit, put in a new liquid-line filter drier. If you measure a pressure drop of more than 3 psi across the drier, it's restricted and needs to be replaced. The AC-5000 takes a 165S series drier."
+    },
+    {
+      "id": "chunk::ac5000::fault-e04",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.1 Fault Codes",
+      "page": 80,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E04 means the main board has lost communication with the compressor variable-frequency drive. Check the RS-485 harness and make sure the termination resistors are in place. Fault E07 means the discharge thermistor is open or shorted."
+    },
+    {
+      "id": "chunk::rtu20::filter",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.1 Air Filters",
+      "page": 8,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The RTU-20 takes four 20x25x2 inch MERV-8 pleated filters. Swap them every 90 days under normal load, or monthly if the environment is dusty. A clogged filter chokes off airflow and can freeze up the evaporator coil."
+    },
+    {
+      "id": "chunk::rtu20::belt",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.2 Blower Belt",
+      "page": 14,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The supply blower runs an A-section V-belt, part BX-38. You want 1/2 inch of belt deflection under 10 lb of force at the midpoint. If the belt squeals on startup, it's usually low tension or a glazed belt that needs replacing."
+    },
+    {
+      "id": "chunk::rtu20::contactor",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.3 Compressor Contactor",
+      "page": 22,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The compressor contactor coil is rated for 24VAC. Pitted or welded contacts lead to hard starting and chattering. Replace the contactor if contact resistance climbs past 0.5 ohm. Don't file the contacts, because that strips off the protective plating."
+    },
+    {
+      "id": "chunk::rtu20::capacitor",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.5 Run Capacitor",
+      "page": 25,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The condenser fan motor runs a 7.5 microfarad 440V run capacitor, and the compressor uses a 40 microfarad 440V capacitor. If a capacitor is bulging or leaking, replace it. Always discharge a capacitor across a 20k ohm resistor before you handle it. If a reading is more than 6 percent below the rated value, the capacitor has failed."
+    },
+    {
+      "id": "chunk::rtu20::economizer",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.1 Economizer",
+      "page": 30,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The economizer damper should swing from fully open to fully closed in under 90 seconds. If it sticks, check the actuator gears and the outdoor air enthalpy sensor. A failed economizer is a common reason for high summer energy bills."
+    },
+    {
+      "id": "chunk::rtu20::freeze",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "6.2 Coil Freeze Troubleshooting",
+      "page": 38,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Evaporator coil icing comes from low airflow, low refrigerant charge, or a stuck contactor that keeps the compressor running nonstop. Let the coil thaw completely before you retest. You want at least 350 CFM per ton of airflow across the coil."
+    },
+    {
+      "id": "chunk::rtu20::drain",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.4 Condensate Drain",
+      "page": 11,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Flush the condensate drain pan and trap every spring. Algae growth plugs the drain and trips the float switch, which shuts cooling down. After cleaning, drop in a condensate pan tablet to keep the algae from coming back."
+    },
+    {
+      "id": "chunk::ahu8::vfd",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.1 Supply Fan VFD",
+      "page": 27,
+      "assetModel": "VentMax AHU-8",
+      "text": "The supply fan variable-frequency drive is set for a minimum speed of 30 Hz to keep up minimum ventilation. Don't drop the minimum below 20 Hz, or the motor will overheat at low airflow. The VFD shows fault F012 on a DC bus overvoltage, which usually comes from decelerating too fast."
+    },
+    {
+      "id": "chunk::ahu8::bearings",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.2 Fan Bearings",
+      "page": 34,
+      "assetModel": "VentMax AHU-8",
+      "text": "Grease the fan shaft bearings every 2000 operating hours, giving each two pumps of NLGI 2 lithium grease. Don't overdo it, since too much grease blows out the bearing seals. A rumbling or grinding noise at speed means a bearing is failing and should be replaced before it seizes."
+    },
+    {
+      "id": "chunk::ahu8::filter",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.1 Filter Bank",
+      "page": 18,
+      "assetModel": "VentMax AHU-8",
+      "text": "The AHU-8 has a two-stage filter bank: MERV-8 pre-filters (24x24x2) and MERV-13 final filters (24x24x12). Replace the pre-filters quarterly and the final filters yearly, or whenever the magnehelic gauge reads above 1.0 inch w.c."
+    },
+    {
+      "id": "chunk::ahu8::coil-valve",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.1 Chilled Water Coil",
+      "page": 41,
+      "assetModel": "VentMax AHU-8",
+      "text": "The chilled water control valve is a 2-way modulating valve run by a 0-10V actuator. If the discharge air temperature won't come down, make sure the valve is actually stroking and that the coil isn't air-bound. Bleed the coil at the high-point air vent."
+    },
+    {
+      "id": "chunk::ahu8::damper",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "7.2 Outdoor Air Damper",
+      "page": 49,
+      "assetModel": "VentMax AHU-8",
+      "text": "The outdoor air damper minimum position is set to 15 percent to meet code-required ventilation. The actuator is spring-return, so it closes on power loss. Once a year, lubricate the damper linkage and check that nothing is binding."
+    },
+    {
+      "id": "chunk::ahu8::belt-tension",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.4 Drive Belt",
+      "page": 37,
+      "assetModel": "VentMax AHU-8",
+      "text": "The AHU-8 supply fan runs dual B-section belts, and you have to replace them as a matched set. Mismatched belts wear unevenly and cut down sheave life. Belt deflection should be 1/64 inch per inch of span under moderate thumb pressure."
+    },
+    {
+      "id": "chunk::ac5000::fault-e01",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E01",
+      "page": 81,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E01: loss of chilled water flow. Make sure the flow switch paddle moves freely and the chilled water pump is running. Flow has to be above 90 GPM before the compressor is allowed to start."
+    },
+    {
+      "id": "chunk::ac5000::fault-e02",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E02",
+      "page": 82,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E02: low suction pressure lockout. This trips when suction pressure drops below 55 psig for more than 30 seconds. Look for a low refrigerant charge, a plugged filter drier, or a failed expansion valve."
+    },
+    {
+      "id": "chunk::ac5000::fault-e03",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E03",
+      "page": 83,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E03: high discharge pressure trip at 610 psig. Clean the condenser coil, make sure both condenser fans are running, and check for a refrigerant overcharge or non-condensables in the system."
+    },
+    {
+      "id": "chunk::ac5000::fault-e05",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E05",
+      "page": 84,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E05: compressor motor over-temperature. The internal thermistor opened above 105 degrees C. Give it 90 minutes to cool down, then look into a low charge or high superheat that's starving the motor of cooling."
+    },
+    {
+      "id": "chunk::ac5000::fault-e06",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E06",
+      "page": 85,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E06: the phase monitor detected phase loss or phase reversal. Check the incoming three-phase power at L1, L2, L3 and verify the fuses. You need correct rotation before you restart."
+    },
+    {
+      "id": "chunk::ac5000::fault-e07",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E07",
+      "page": 86,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E07: freeze protection trip. The leaving chilled water temperature dropped below 36 degrees F. Verify water flow, check the freeze stat calibration, and if you're running glycol, check its concentration."
+    },
+    {
+      "id": "chunk::ac5000::fault-e08",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E08",
+      "page": 87,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E08: low oil pressure on compressor 1. With the compressor off, check the oil level in the sight glass, and only add POE ISO 32 oil if it's below the lower mark. If the oil looks dark, run an acid test."
+    },
+    {
+      "id": "chunk::ac5000::fault-e09",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E09",
+      "page": 88,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E09: the evaporator entering water temperature sensor is out of range, reading open or shorted. Replace it with sensor part TS-4410; it should read 10k ohms at 77 degrees F."
+    },
+    {
+      "id": "chunk::ac5000::fault-e10",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E10",
+      "page": 89,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E10: condenser fan VFD fault. Read the fault code on the VFD display; an overcurrent usually points to a seized fan bearing. The VFD is a DriveTek D2-40 mounted in the control cabinet."
+    },
+    {
+      "id": "chunk::ac5000::fault-e11",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E11",
+      "page": 90,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E11: low superheat alarm. Superheat below 4 degrees F risks liquid floodback into the compressor. Check the electronic expansion valve stepper motor and the mounting strap on the suction temperature sensor."
+    },
+    {
+      "id": "chunk::ac5000::fault-e12",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E12",
+      "page": 91,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E12: compressor 2 won't start. Check the contactor coil for 24VAC, inspect the contacts for pitting, and make sure the crankcase heater ran at least 8 hours before startup after a power loss."
+    },
+    {
+      "id": "chunk::ac5000::fault-e13",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E13",
+      "page": 92,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E13: the optional cabinet sensor detected a refrigerant leak. Ventilate the area, then do a bubble test at the braze joints, the relief valve, and the Schrader cores. The repair requires EPA 608 certification."
+    },
+    {
+      "id": "chunk::ac5000::fault-e14",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E14",
+      "page": 93,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E14: communication loss with the BACnet building system. Check the MS/TP wiring polarity at terminals 41 and 42, and make sure the MAC address isn't conflicting with another device on the trunk."
+    },
+    {
+      "id": "chunk::ac5000::fault-e15",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E15",
+      "page": 94,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E15: chilled water pump interlock open. Before it will enable cooling, the unit needs a dry-contact run signal from the pump starter at terminals 33 and 34."
+    },
+    {
+      "id": "chunk::ac5000::fault-e17",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "9.2 Fault Code E17",
+      "page": 95,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Fault E17: compressor short-cycle protection is active. The controller holds a 5 minute anti-recycle timer. If it keeps triggering, suspect a leaking check valve or an erratic thermostat signal."
+    },
+    {
+      "id": "chunk::rtu20::fault-f01",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F01",
+      "page": 45,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F01: supply fan proving failure. The differential pressure switch didn't close within 30 seconds of a fan call. Check the belt, look for kinks in the switch tubing, and check the fan contactor."
+    },
+    {
+      "id": "chunk::rtu20::fault-f02",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F02",
+      "page": 46,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F02: dirty filter alarm. The filter pressure switch closed at 0.8 inches w.c. Replace all four 20x25x2 MERV-8 filters and reset the alarm from the unit display."
+    },
+    {
+      "id": "chunk::rtu20::fault-f03",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F03",
+      "page": 47,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F03: ignition failure lockout after three failed ignition attempts. Check the gas supply pressure (7 inches w.c. natural gas), look for cracks in the hot surface ignitor, and check the flame sensor for an oxide coating."
+    },
+    {
+      "id": "chunk::rtu20::fault-f04",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F04",
+      "page": 48,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F04: flame sensed with the gas valve closed. This is a hard lockout. Inspect the gas valve for leak-through and replace valve part GV-2250 if the flame current stays above 0.5 microamps."
+    },
+    {
+      "id": "chunk::rtu20::fault-f05",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F05",
+      "page": 49,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F05: high limit switch open. The heat exchanger went past 160 degrees F. Verify the blower is running, check for blocked filters, and inspect the limit switch, which sits above the burner tray."
+    },
+    {
+      "id": "chunk::rtu20::fault-f06",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F06",
+      "page": 50,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F06: rollout switch tripped. Flames escaped the burner enclosure, which points to a cracked heat exchanger or a blocked flue. Don't reset it until the heat exchanger passes a combustion inspection."
+    },
+    {
+      "id": "chunk::rtu20::fault-f07",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F07",
+      "page": 51,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F07: the inducer motor pressure switch is stuck open. Check the inducer wheel for debris, make sure the flue is clear of nests or ice, and check the switch tubing for a condensate blockage."
+    },
+    {
+      "id": "chunk::rtu20::fault-f08",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F08",
+      "page": 52,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F08: low pressure switch open on the cooling circuit. Suction fell below 50 psig. Check the charge level and make sure the evaporator coil isn't iced before you dig deeper."
+    },
+    {
+      "id": "chunk::rtu20::fault-f09",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F09",
+      "page": 53,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F09: high pressure switch trip at 590 psig. Clean the condenser coil with a low-pressure cleaner and confirm the condenser fan runs at full speed. This switch is manual reset and sits on the discharge line."
+    },
+    {
+      "id": "chunk::rtu20::fault-f10",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F10",
+      "page": 54,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F10: compressor contactor welded. The controller saw compressor current with no call for cooling. Replace contactor part CT-3340; don't try to file the contacts."
+    },
+    {
+      "id": "chunk::rtu20::fault-f11",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F11",
+      "page": 55,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F11 means the economizer damper didn't make it to where the controller told it to go within 90 seconds. Start by checking the linkage set screws, then confirm you're getting the 2-10VDC signal at the actuator terminals."
+    },
+    {
+      "id": "chunk::rtu20::fault-f12",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F12",
+      "page": 56,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F12 is a mixed air temperature sensor failure, meaning the sensor is reading out of range. You'll find it mounted on the blower bulkhead. Swap it out with part TS-1120, a 10k type II thermistor."
+    },
+    {
+      "id": "chunk::rtu20::fault-f13",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F13",
+      "page": 57,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F13 tells you the condensate overflow switch tripped, which means the float switch in the drain pan opened. Flush the P-trap and drain line with algaecide tablets, and make sure the pan actually slopes toward the drain."
+    },
+    {
+      "id": "chunk::rtu20::fault-f14",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F14",
+      "page": 58,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F14 is a smoke detector shutdown. The duct smoke detector in the return opening tripped, and the unit won't restart until someone resets the detector over at the building fire panel."
+    },
+    {
+      "id": "chunk::rtu20::fault-f15",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.1 Fault Code F15",
+      "page": 59,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fault F15 is a phase monitor fault, triggered by a voltage imbalance above 3 percent or a lost phase on the incoming feed. Measure all three phases at the disconnect. Keep in mind an imbalance will overheat the compressor motor."
+    },
+    {
+      "id": "chunk::ahu8::fault-a01",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A01",
+      "page": 61,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A01 is a supply fan VFD overcurrent. Look for a seized bearing, a slipped belt wrapping around the shaft, or dampers stuck closed, which forces the fan to ride its surge line."
+    },
+    {
+      "id": "chunk::ahu8::fault-a02",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A02",
+      "page": 62,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A02 is a freeze stat trip, meaning discharge air dropped below 38 degrees F across the chilled water coil face. The stat uses a 20 foot averaging element. Once you've found and fixed the cause, reset the manual button on the element housing."
+    },
+    {
+      "id": "chunk::ahu8::fault-a03",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A03",
+      "page": 63,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A03 is a static pressure sensor failure, where the duct static transducer reads either zero or full scale. Check that the tubing running to the sensing tip, located two-thirds down the main trunk duct, is intact."
+    },
+    {
+      "id": "chunk::ahu8::fault-a04",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A04",
+      "page": 64,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A04 means the chilled water valve isn't closing, so the discharge air stays cold even with a zero percent command. Check the 0-10V signal at the actuator, and inspect the valve stem for debris that's keeping it from fully stroking."
+    },
+    {
+      "id": "chunk::ahu8::fault-a05",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A05",
+      "page": 65,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A05 is a high filter differential, meaning the final filter bank has passed 1.2 inches w.c. Replace the MERV-13 final filters. Don't let it run past 1.5 inches, or the fan may push the motor over its amperage limits."
+    },
+    {
+      "id": "chunk::ahu8::fault-a06",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A06",
+      "page": 66,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A06 means a fan belt is broken or slipping, since the RPM sensor reads below 200 while the VFD is up to speed. Replace both B-section belts together as a matched set, and re-tension them after 24 run hours."
+    },
+    {
+      "id": "chunk::ahu8::fault-a07",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A07",
+      "page": 67,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A07 is an outdoor air damper failure, where the damper didn't reach its 15 percent minimum position. Check the actuator spring return, and in winter, look at the damper blade seals for icing."
+    },
+    {
+      "id": "chunk::ahu8::fault-a08",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A08",
+      "page": 68,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A08 flags a supply air temperature sensor mismatch, where the DAT sensor disagrees with the BMS backup sensor by more than 5 degrees. Recalibrate both against a certified thermometer at the sensor well."
+    },
+    {
+      "id": "chunk::ahu8::fault-a09",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A09",
+      "page": 69,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A09 is a hot water valve leak-through: the discharge air climbs above setpoint even with the valve commanded closed. Isolate and inspect the valve seat, and if the cartridge on part HWV-125 is scored, replace it."
+    },
+    {
+      "id": "chunk::ahu8::fault-a10",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A10",
+      "page": 70,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A10 is a VFD communication loss, meaning the drive dropped off the BMS network. Check that the shielded cable is landed properly at drive terminals 68 and 69, and confirm the drive's node address is correct."
+    },
+    {
+      "id": "chunk::ahu8::fault-a11",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A11",
+      "page": 71,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A11 means the smoke damper interlock is open, because the fire alarm system de-energized the damper actuators. The AHU won't restart until the fire panel restores the interlock circuit at terminal strip TB-4."
+    },
+    {
+      "id": "chunk::ahu8::fault-a12",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A12",
+      "page": 72,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A12 is a high condensate pan level, meaning the drain pan float switch tripped. Clear the trap, make sure the trap depth is at least 4 inches for a draw-through configuration, and treat it with algaecide."
+    },
+    {
+      "id": "chunk::ahu8::fault-a13",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A13",
+      "page": 73,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A13 is a humidifier fault, where the steam humidifier reports a cylinder fault. Replace the disposable cylinder once conductivity goes past its limits, which usually happens each heating season."
+    },
+    {
+      "id": "chunk::ahu8::fault-a14",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A14",
+      "page": 74,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A14 is a motor over-temperature, meaning the supply fan motor thermistor opened. Check whether the VFD carrier frequency is above 8 kHz, which heats the motor, and make sure the motor cooling fins are clean."
+    },
+    {
+      "id": "chunk::ahu8::fault-a15",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "9.3 Fault Code A15",
+      "page": 75,
+      "assetModel": "VentMax AHU-8",
+      "text": "Fault A15 means the airflow station is out of range, with the piezometer airflow reading disagreeing with fan speed by more than 20 percent. Inspect the sensing grid for dust loading and re-zero the transducer."
+    },
+    {
+      "id": "chunk::ac5000::superheat-check",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.2 Measuring Superheat",
+      "page": 52,
+      "assetModel": "AeroCool AC-5000",
+      "text": "To measure superheat, clamp a temperature probe onto the suction line 6 inches from the compressor, then read suction pressure at the service valve. You're aiming for 8 to 12 degrees F of superheat at full load. Too low, and you risk liquid floodback; too high usually means an undercharge or a starving expansion valve."
+    },
+    {
+      "id": "chunk::ac5000::subcooling-check",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.3 Measuring Subcooling",
+      "page": 54,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Take your subcooling reading at the liquid line as it leaves the condenser. The target is 10 to 14 degrees F at 95 degrees F ambient. If subcooling is low while superheat is high, that confirms an undercharge. High subcooling points to an overcharge or a restriction in the liquid line."
+    },
+    {
+      "id": "chunk::ac5000::eev-service",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.5 Electronic Expansion Valve",
+      "page": 60,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The AC-5000 uses a stepper-motor electronic expansion valve, part EEV-500, which the controller drives anywhere between 0 and 480 steps. During commissioning, keep an eye on the valve position on the display. If it's hunting back and forth between wide-open and near-closed positions, suspect a loose suction sensor or a trapped bulb line."
+    },
+    {
+      "id": "chunk::ac5000::filter-drier-moisture",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.6 Moisture Indicator",
+      "page": 62,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The liquid line sight glass has a moisture indicator ring built in. Green means the system is dry; yellow tells you moisture is above 75 ppm and it's time to replace the filter drier core. After replacing it, run the system 12 hours before you re-check the indicator."
+    },
+    {
+      "id": "chunk::ac5000::refrigerant-recovery",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.7 Refrigerant Recovery",
+      "page": 63,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Before you open the circuit, recover the R-410A into a DOT-approved recovery cylinder rated for 400 psig. Never mix refrigerants in one cylinder. A full charge is 18 lb per circuit, so log the recovered weight in the service record."
+    },
+    {
+      "id": "chunk::ac5000::evacuation",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.8 Evacuation Procedure",
+      "page": 64,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Evacuate down to 500 microns and hold there for 15 minutes with the pump isolated. If it rises above 1000 microns, you've got moisture or a leak. Using core removal tools on both service ports will speed the evacuation up considerably."
+    },
+    {
+      "id": "chunk::ac5000::nitrogen-brazing",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.9 Brazing Practice",
+      "page": 65,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Always flow dry nitrogen at 2 to 3 psig through the tubing while you braze, so you don't form oxide scale. That scale eventually flakes off and plugs the expansion valve screen. On dissimilar joints, use a 15 percent silver alloy."
+    },
+    {
+      "id": "chunk::ac5000::leak-detection",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.10 Leak Detection",
+      "page": 66,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Use an electronic leak detector that's sensitive down to 0.1 oz per year for R-410A. Check the braze joints, Schrader cores, the relief valve seat, and the pressure transducer threads. Before you repair anything, confirm the find with bubble solution."
+    },
+    {
+      "id": "chunk::ac5000::crankcase-heater",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.6 Crankcase Heater",
+      "page": 47,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Each compressor has a 90 watt belly-band crankcase heater. After any power interruption, it needs to be energized 8 hours before startup to boil the refrigerant back out of the oil. Start up with a cold, migrated crankcase and you'll slug the scroll set."
+    },
+    {
+      "id": "chunk::ac5000::compressor-staging",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.7 Compressor Staging",
+      "page": 48,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The two scroll compressors run lead-lag. To even out the wear, the controller rotates which one leads every 168 run hours. If you need to pick the lead manually, that option is in the service menu under STAGING."
+    },
+    {
+      "id": "chunk::ac5000::oil-acid-test",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.8 Oil Analysis",
+      "page": 49,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Once a year, pull an oil sample through the Schrader on the oil fill port. Dark oil, or an acid number above 0.05, is an early warning sign of a burnout. If you see that, install an acid-scavenging filter drier core and re-test in 30 days."
+    },
+    {
+      "id": "chunk::ac5000::condenser-fan-motor",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.5 Condenser Fan Motors",
+      "page": 35,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The two condenser fan motors are 2 HP, 1140 RPM, totally enclosed air-over. Their bearings are sealed and can't be greased, so at the first hint of bearing noise, just replace the motor. Blade tip clearance to the orifice ring should be 0.25 inches."
+    },
+    {
+      "id": "chunk::ac5000::condenser-fan-vfd",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.6 Condenser Fan Speed Control",
+      "page": 36,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The lead condenser fan runs off a DriveTek D2-40 VFD that modulates to hold 340 psig discharge pressure, with a minimum speed of 25 percent. When ambient drops below 40 degrees F, you'll need the wind baffle kit installed to keep head pressure stable."
+    },
+    {
+      "id": "chunk::ac5000::low-ambient-kit",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.7 Low Ambient Operation",
+      "page": 37,
+      "assetModel": "AeroCool AC-5000",
+      "text": "For cooling below 40 degrees F ambient, install the low ambient kit, which includes a discharge pressure transducer, a fan VFD, and wind baffles. Skip the kit and head pressure collapses, leaving the expansion valve without the pressure differential it needs."
+    },
+    {
+      "id": "chunk::ac5000::coil-fin-repair",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.8 Fin Straightening",
+      "page": 38,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Straighten any bent condenser fins using a fin comb matched to 14 fins per inch. Once fin blockage gets past 20 percent, it noticeably raises head pressure and will trip the high pressure switch on hot days."
+    },
+    {
+      "id": "chunk::ac5000::coil-coating",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.9 Coastal Coil Protection",
+      "page": 39,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Any unit within 5 miles of salt water should get the epoxy-coated condenser coil option. Wash coated coils quarterly with fresh water only. Coil cleaners break down the coating and will void the corrosion warranty."
+    },
+    {
+      "id": "chunk::ac5000::water-flow-switch",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.1 Chilled Water Flow Switch",
+      "page": 67,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The paddle flow switch on the evaporator inlet needs 90 GPM minimum to close. To test it, slowly close the manual balancing valve; the compressor should shut down within 5 seconds of losing flow. Never jumper the flow switch."
+    },
+    {
+      "id": "chunk::ac5000::evap-strainer",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.2 Water Strainer",
+      "page": 68,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Blow down the Y-strainer on the evaporator inlet once a month during cooling season. A fouled strainer can look just like a pump failure, giving you low flow, cold approach temperatures, and freeze stat trips. The strainer mesh is 20 mesh stainless."
+    },
+    {
+      "id": "chunk::ac5000::glycol-concentration",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.3 Glycol Requirements",
+      "page": 69,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Any system that can freeze needs to run 30 percent propylene glycol, which protects down to 8 degrees F. Check the concentration each fall with a refractometer. Watch the high end too, since glycol above 40 percent derates evaporator capacity by 10 percent."
+    },
+    {
+      "id": "chunk::ac5000::plate-hx-approach",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.4 Evaporator Approach",
+      "page": 70,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The brazed plate evaporator approach, which is leaving water minus saturated suction temperature, should land between 4 and 8 degrees F. If that approach starts trending upward, it's a sign of fouling; backflush it with a 5 percent phosphoric acid solution."
+    },
+    {
+      "id": "chunk::ac5000::freeze-stat-cal",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.5 Freeze Stat Calibration",
+      "page": 71,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The freeze stat opens at 36 degrees F leaving water. Test it yearly by dropping the sensing bulb into an ice bath, where it should open somewhere between 35 and 37 degrees F. If it's out of range, replace part FS-360."
+    },
+    {
+      "id": "chunk::ac5000::relief-valve",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "8.3 Pressure Relief Valve",
+      "page": 74,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The condenser relief valve is set at 650 psig and must never be capped or plugged. If it has ever lifted, replace it, because the seat won't reliably reseal afterward. Pipe the vent line outdoors to meet code."
+    },
+    {
+      "id": "chunk::ac5000::hp-transducer",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "8.4 Pressure Transducers",
+      "page": 75,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The discharge and suction pressure transducers put out 0.5 to 4.5 VDC. Check them against calibrated gauges each year; if you see more than 5 psig of error at operating pressure, replace the transducer. Use part PT-650 for discharge and PT-200 for suction."
+    },
+    {
+      "id": "chunk::ac5000::control-board",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "10.1 Main Controller",
+      "page": 85,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The MC-9 main controller keeps a log of 200 alarm events, each with a timestamp. You can pull up the alarm history from the display under MENU then HISTORY. A CR2032 backup battery holds the clock for 5 years, so replace it during any major service."
+    },
+    {
+      "id": "chunk::ac5000::display-navigation",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "10.2 Display Panel",
+      "page": 86,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The service display's STATUS screen shows suction and discharge pressure, superheat, subcooling, water temperatures, and valve position. To unlock the service menu, press and hold ENTER for 5 seconds; the default code is 4321."
+    },
+    {
+      "id": "chunk::ac5000::bacnet-points",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "10.3 BACnet Integration",
+      "page": 87,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The AC-5000 exposes 45 BACnet objects over MS/TP, covering setpoints, temperatures, pressures, alarm status, and run enables. The default MAC is 12 and the baud is 38400. You can change the addressing from the service menu under NETWORK."
+    },
+    {
+      "id": "chunk::ac5000::alarm-history",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "10.4 Interpreting Alarm History",
+      "page": 88,
+      "assetModel": "AeroCool AC-5000",
+      "text": "A cluster of E02 low suction alarms in the early morning usually means the unit is short-cycling on low load, not losing charge. Before recovering charge, compare the alarm timestamps against the building's occupancy schedule."
+    },
+    {
+      "id": "chunk::ac5000::winterization",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "11.1 Winter Shutdown",
+      "page": 90,
+      "assetModel": "AeroCool AC-5000",
+      "text": "For a seasonal shutdown, here's the drill: pump the refrigerant down into the condenser, open the compressor disconnects, drain the chilled water circuit (or confirm you've got glycol protection), and leave the crankcase heaters powered on. Don't forget to tag the disconnect with the shutdown date."
+    },
+    {
+      "id": "chunk::ac5000::spring-startup",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "11.2 Spring Startup",
+      "page": 91,
+      "assetModel": "AeroCool AC-5000",
+      "text": "For spring startup, go in order: check wiring for rodent damage, megger the compressor motors above 1 megohm, confirm crankcase heat for 8 hours, verify water flow, then start with the service display up so you can watch the pressures stabilize."
+    },
+    {
+      "id": "chunk::ac5000::vibration-isolators",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.9 Vibration Isolation",
+      "page": 50,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The compressor rail sits on four neoprene isolators, durometer 50. If any show cracks or have compressed down below 75 percent of their original height, swap them out. Left alone, the extra vibration carries into the roof structure and slowly fatigues the refrigerant lines."
+    },
+    {
+      "id": "chunk::ac5000::discharge-line-temp",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.10 Discharge Temperature",
+      "page": 51,
+      "assetModel": "AeroCool AC-5000",
+      "text": "A normal discharge line temperature runs 150 to 200 degrees F, taken 6 inches out from the compressor. If you're seeing above 225 degrees F, that's a sign of a high compression ratio or low charge, and once you get past 250 degrees F the oil starts to break down."
+    },
+    {
+      "id": "chunk::ac5000::pump-down",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.11 Pump Down Procedure",
+      "page": 72,
+      "assetModel": "AeroCool AC-5000",
+      "text": "To pump down before service: close the liquid line service valve, let the compressor run until suction drops to 5 psig, then shut it off and close the suction valve right away. Just don't let it pull below 0 psig, or air will get in and contaminate the circuit."
+    },
+    {
+      "id": "chunk::ac5000::schrader-cores",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.12 Service Port Cores",
+      "page": 73,
+      "assetModel": "AeroCool AC-5000",
+      "text": "If your gauges show seepage after you disconnect, go ahead and replace the Schrader cores. Only use cores rated for HFC with neoprene seals, part SC-410. A weeping core can quietly lose up to 1 lb of charge a year."
+    },
+    {
+      "id": "chunk::ac5000::capacity-control",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.11 Capacity Modulation",
+      "page": 53,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The lead compressor is a digital scroll, and it unloads anywhere from 20 to 100 percent by briefly separating its scroll set. That rapid clicking you hear from the unloader solenoid at low load is completely normal. While you're there, check that the solenoid coil reads 1400 ohms."
+    },
+    {
+      "id": "chunk::ac5000::economizer-water",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.6 Waterside Economizer",
+      "page": 76,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Units with the waterside economizer option route chilled water through a pre-cooling coil whenever the outdoor wet bulb drops below 45 degrees F. Each fall before economizer season kicks in, make sure the diverting valve strokes all the way open."
+    },
+    {
+      "id": "chunk::ac5000::elec-panel-torque",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "12.1 Electrical Connections",
+      "page": 95,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Once a year, re-torque all the power lugs: compressor contactor lugs to 45 in-lb and the distribution block to 120 in-lb. Loose lugs are the number one cause of single-phasing failures, so it's worth doing. If you can, run an infrared scan under full load too."
+    },
+    {
+      "id": "chunk::ac5000::fuse-sizing",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "12.2 Fusing",
+      "page": 96,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The control circuit is protected by a 5 amp FNQ-R time-delay fuse, and the compressor circuits use 80 amp LPJ class J fuses. Don't ever swap in fast-acting fuses, because the scroll's inrush on a hot start will blow them for no good reason."
+    },
+    {
+      "id": "chunk::ac5000::transformer-taps",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "12.3 Control Transformer",
+      "page": 97,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The 150 VA control transformer has primary taps for 460, 480, and 500 volt supplies. If your control voltage reads under 22 VAC at the farthest device, move down to the lower tap. Chronically low control voltage will make the contactors chatter."
+    },
+    {
+      "id": "chunk::ac5000::megger-test",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "12.4 Motor Insulation Testing",
+      "page": 98,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Megger the compressor windings at 500 VDC. Anything above 100 megohms is healthy; if it's below 1 megohm, don't start it. Always disconnect the VFD and controller before you megger, or you'll fry the electronics."
+    },
+    {
+      "id": "chunk::ac5000::sound-blanket",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.12 Sound Attenuation",
+      "page": 55,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The compressor sound blankets knock the noise down by 6 dBA. Just make sure the blanket isn't covering the crankcase heater or terminal box. If it slips out of place and ends up against the discharge line, it'll scorch."
+    },
+    {
+      "id": "chunk::ac5000::txv-superheat-adjust",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.13 Expansion Valve Adjustment",
+      "page": 77,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Only adjust superheat after you've confirmed the charge is right by checking subcooling. One full turn clockwise on the EEV backup TXV spindle bumps superheat up about 1 degree F. Give the system 15 minutes to settle between adjustments."
+    },
+    {
+      "id": "chunk::ac5000::charge-by-subcool",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.14 Charging by Subcooling",
+      "page": 78,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Add liquid R-410A into the liquid line with the unit running at steady full load. Keep charging until subcooling hits the nameplate value of 12 degrees F. Weigh every bit of charge you add and write it down on the unit log."
+    },
+    {
+      "id": "chunk::ac5000::noncondensables",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "6.15 Non-condensables Check",
+      "page": 79,
+      "assetModel": "AeroCool AC-5000",
+      "text": "With the unit sitting off overnight, condenser pressure should line up with the saturation pressure for the ambient temperature. If it's more than 5 psig above saturation, you've got air in the system: recover it, evacuate down to 500 microns, and weigh in a fresh charge."
+    },
+    {
+      "id": "chunk::ac5000::compressor-replacement",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "5.13 Compressor Replacement",
+      "page": 56,
+      "assetModel": "AeroCool AC-5000",
+      "text": "After a burnout, put in a suction line filter drier with an acid core, replace the liquid line drier, and change the oil in the compressor that's left. Re-test for acid at 30 days, and once it comes back clean, pull the suction drier back out."
+    },
+    {
+      "id": "chunk::ac5000::water-treatment",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.7 Water Quality",
+      "page": 80,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The closed-loop chilled water should sit between pH 8.5 and 10.5 with nitrite inhibitor at 800 ppm or higher. Running an annual water analysis keeps pinhole corrosion out of the brazed plate evaporator, which you can't repair once it goes."
+    },
+    {
+      "id": "chunk::ac5000::panel-gaskets",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.10 Cabinet Maintenance",
+      "page": 40,
+      "assetModel": "AeroCool AC-5000",
+      "text": "If the cabinet panel gaskets have gone flat and no longer compress, replace them, because rain getting into the control cabinet is the top cause of board failures. Touch up any scratches with the epoxy paint pen that comes with the unit to keep rust from creeping."
+    },
+    {
+      "id": "chunk::ac5000::startup-log",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "3.2 Commissioning Data",
+      "page": 20,
+      "assetModel": "AeroCool AC-5000",
+      "text": "At commissioning, write down your suction and discharge pressures, superheat, subcooling, water delta-T, voltage, and compressor amps at full load. Those baseline numbers are what let you spot drift years down the road. Keep the log in the document pouch inside the control panel."
+    },
+    {
+      "id": "chunk::ac5000::water-delta-t",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "7.8 Water Temperature Differential",
+      "page": 82,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The design chilled water delta-T is 10 degrees F at 120 GPM. If delta-T is below 6 degrees but setpoint is satisfied, you're over-pumping; above 14 degrees means low flow. Sort out the flow before you go blaming the compressor."
+    },
+    {
+      "id": "chunk::ac5000::service-clearance",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "2.1 Service Access",
+      "page": 12,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Keep 36 inches of clearance on the control panel side and 48 inches above the condenser fans. If the coil side has less than 24 inches, it recirculates hot discharge air and drives head pressure up by 20 psig or more."
+    },
+    {
+      "id": "chunk::ac5000::rigging",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "2.2 Rigging and Lifting",
+      "page": 13,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The AC-5000 weighs 2,850 lb dry. Use spreader bars on all four lifting lugs, because chains pulling in against the cabinet will crush the coil headers. Keep in mind the center of gravity leans toward the compressor end."
+    },
+    {
+      "id": "chunk::ac5000::nameplate-data",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "2.3 Nameplate Information",
+      "page": 14,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The nameplate gives you RLA 42 amps per compressor, LRA 240 amps, MCA 110 amps, and MOP 125 amps. Size your field wiring to the MCA, and make sure the breaker or fuse never goes above the MOP."
+    },
+    {
+      "id": "chunk::ac5000::seasonal-checklist",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "11.3 Quarterly Checklist",
+      "page": 92,
+      "assetModel": "AeroCool AC-5000",
+      "text": "Every quarter: clean the condenser coil, blow down the water strainer, check the oil sight glass, compare superheat and subcooling against your commissioning baseline, test the flow switch, look over the alarm history, and record the water delta-T."
+    },
+    {
+      "id": "chunk::rtu20::gas-pressure",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.1 Gas Supply Pressure",
+      "page": 40,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Inlet gas pressure needs to be 7 inches w.c. for natural gas, measured at the tap on the gas valve with every other appliance firing. Manifold pressure is 3.5 inches w.c. Always set these with a calibrated manometer, never by ear."
+    },
+    {
+      "id": "chunk::rtu20::ignitor-service",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.2 Hot Surface Ignitor",
+      "page": 41,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The silicon nitride ignitor, part IG-119, should read 40 to 90 ohms cold. Replace it if it's cracked or the resistance is out of range, and handle it by the base only, since skin oils shorten the element's life. Figure on 3 to 5 heating seasons out of one."
+    },
+    {
+      "id": "chunk::rtu20::flame-sensor",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.3 Flame Sensor",
+      "page": 42,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Each fall, clean the flame sensor rod with fine steel wool, never sandpaper. A healthy flame current runs 2 to 6 microamps DC measured in series. Once it drops below 1 microamp, the board cuts the gas valve mid-cycle, which can look just like a gas supply problem."
+    },
+    {
+      "id": "chunk::rtu20::heat-exchanger-inspect",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.4 Heat Exchanger Inspection",
+      "page": 43,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Inspect the tubular heat exchanger every year with an inspection camera through the burner openings. If you find any crack or rust perforation, the heat section has to be replaced, because carbon monoxide can leak into the supply air stream."
+    },
+    {
+      "id": "chunk::rtu20::gas-valve",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.5 Gas Valve",
+      "page": 44,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The redundant gas valve GV-2250 drops out below 18 VAC. Measure the voltage right at the valve during ignition; if it chatters, you've got either a loaded control transformer or undersized thermostat wire. The valve can't be repaired in the field."
+    },
+    {
+      "id": "chunk::rtu20::inducer-motor",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.6 Draft Inducer",
+      "page": 46,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The draft inducer runs a 15 second pre-purge before ignition. A wobbling wheel or grinding sound means the bearing is on its way out, part IND-330. During purge, confirm the pressure switch closes at 0.4 inches w.c."
+    },
+    {
+      "id": "chunk::rtu20::combustion-analysis",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.7 Combustion Testing",
+      "page": 47,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Run a combustion analysis every heating season: you're aiming for 8 to 9.5 percent CO2 with CO under 100 ppm air-free in the flue. If CO is high but CO2 looks normal, that points to flame impingement from a misaligned burner tray."
+    },
+    {
+      "id": "chunk::rtu20::blower-wheel-cleaning",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.3 Blower Wheel",
+      "page": 15,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "A dirty blower wheel can quietly cost you up to 20 percent of your airflow with no obvious belt or motor symptom to tip you off. At dusty sites, pull the blower assembly once a year and wash the wheel; dried lint on the forward-curved blades throws it out of balance and chews up the bearings."
+    },
+    {
+      "id": "chunk::rtu20::sheave-alignment",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.4 Pulley Alignment",
+      "page": 16,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Line up the motor and blower sheaves with a straightedge, within 1/16 inch. When they're off, belts get thrown and one belt edge wears shiny. Once they're aligned, re-tension to 1/2 inch of deflection at 5 lb of force mid-span for the BX-38 belt."
+    },
+    {
+      "id": "chunk::rtu20::belt-tensioner",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.5 Motor Base Adjustment",
+      "page": 17,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Tension the belts by sliding the motor base, keeping the adjustment bolts threaded in evenly. Over-tensioned belts will kill the blower bearings inside a season. A squeal on startup means it's either under-tensioned or the belt is glazed and needs replacing, not dressing."
+    },
+    {
+      "id": "chunk::rtu20::blower-bearings",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.6 Blower Shaft Bearings",
+      "page": 18,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The blower shaft rides in two pillow-block bearings. Give each one pump of NLGI 2 lithium grease every 6 months, and don't overdo it or you'll blow out the seals. If you feel any roughness turning them by hand, replace both bearings as a pair, part BRG-107."
+    },
+    {
+      "id": "chunk::rtu20::economizer-enthalpy",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.2 Enthalpy Changeover",
+      "page": 31,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The economizer runs off a solid-state enthalpy sensor in the outdoor air hood, set to curve C. When outdoor enthalpy falls below that curve, the dampers modulate for free cooling before the compressor stages up. Each spring, check the changeover with a psychrometer."
+    },
+    {
+      "id": "chunk::rtu20::economizer-actuator",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.3 Damper Actuator",
+      "page": 32,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The economizer actuator takes a 2-10VDC signal and swings 90 degrees in 90 seconds. Each quarter, check the linkage set screws on the damper jackshaft; a crank arm that slips leaves the dampers stuck partly open and freezes the coils come winter."
+    },
+    {
+      "id": "chunk::rtu20::dcv-co2",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.4 Demand Ventilation",
+      "page": 33,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "With the DCV option, a return-air CO2 sensor resets the minimum damper position between 10 and 25 percent as CO2 climbs from 800 to 1100 ppm. Calibrate that sensor once a year with a 1000 ppm reference gas kit."
+    },
+    {
+      "id": "chunk::rtu20::barometric-relief",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.5 Barometric Relief",
+      "page": 34,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The gravity relief damper on the return hood has to swing freely. If it sticks closed, the building pressurizes when the economizer opens and the doors get hard to pull open. Keep the pivot pins lubed with dry silicone spray."
+    },
+    {
+      "id": "chunk::rtu20::condensate-trap",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.5 Drain Trap Design",
+      "page": 12,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The condensate trap needs to be at least 3 inches deep, since the drain pan sits on the negative pressure side. A trap that's too shallow just sucks air, and the pan overflows even when the line is clear. Prime the trap each spring before cooling season."
+    },
+    {
+      "id": "chunk::rtu20::condensate-tablets",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.6 Pan Treatment",
+      "page": 13,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Drop two algaecide tablets in the drain pan each quarter through cooling season. Set them well away from the drain opening so bits of tablet don't dissolve and wash in to plug the trap."
+    },
+    {
+      "id": "chunk::rtu20::filter-upgrade",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.2 Filter Options",
+      "page": 9,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The filter rack takes either 2 inch or 4 inch media. Going up to MERV-13 means adding the 4 inch rack kit and costs you another 0.15 inches w.c. of pressure drop, so before you upgrade, make sure the blower RPM can still hold your design airflow."
+    },
+    {
+      "id": "chunk::rtu20::txv-bulb",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "6.3 Expansion Valve Bulb",
+      "page": 39,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The TXV sensing bulb clamps onto the suction line at the 4 o'clock position and gets insulated with cork tape. If the bulb is loose or left uninsulated, it reads warm and overfeeds the coil, which floods the compressor at low load."
+    },
+    {
+      "id": "chunk::rtu20::charge-check-subcool",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "6.4 Verifying Charge",
+      "page": 40,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Check the charge by subcooling at the liquid line service port, aiming for 10 degrees F at 95 degrees ambient. The RTU-20 holds 14.2 lb of R-410A per circuit. After any repair, always weigh the charge back in rather than topping off blind."
+    },
+    {
+      "id": "chunk::rtu20::compressor-megohm",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.6 Compressor Testing",
+      "page": 26,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "To test the compressor windings, read all three terminals: they should be balanced within 7 percent and above 1 megohm to ground at 500 VDC. A tripped internal overload reads open on all terminals, so let it cool 2 hours before condemning it."
+    },
+    {
+      "id": "chunk::rtu20::capacitor-test",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.7 Capacitor Testing",
+      "page": 27,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Always test run capacitors with a capacitance meter, not just an ohmmeter. Replace one when its measured value falls more than 6 percent below the rating, which is 45 microfarads for the compressor and 7.5 for the condenser fan. If the top is bulged, replace it right away."
+    },
+    {
+      "id": "chunk::rtu20::contactor-inspect",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.8 Contactor Service",
+      "page": 28,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Inspect the contactor points each spring. Gray frosting is normal, but black pitting or blue heat discoloration on the lugs means replace it. Check coil resistance too: the CT-3340 coil should read 12 ohms, and a shorted coil cooks the thermostat transformer."
+    },
+    {
+      "id": "chunk::rtu20::crankcase-heater-rtu",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.9 Crankcase Heat",
+      "page": 29,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "In cold weather, the 40 watt crankcase heater needs to be on for 24 hours before you start the compressor. It shuts off while the compressor is running. If the heater fails, refrigerant migrates into the compressor and can slug the scrolls on a morning start."
+    },
+    {
+      "id": "chunk::rtu20::defrost-na",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "6.5 Cold Weather Cooling",
+      "page": 41,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "If a server room needs cooling below 40 degrees F outdoor, add the low ambient kit with fan cycling control. Without it, head pressure collapses, the TXV starves for refrigerant, and the evaporator will ice up even with a clean filter and correct charge."
+    },
+    {
+      "id": "chunk::rtu20::outdoor-coil-cleaning",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.7 Condenser Coil Care",
+      "page": 14,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Rinse the outdoor coil every quarter, working from the inside out with a garden hose after you take off the top panel. Only reach for foaming coil cleaner on greasy films; strong alkaline cleaners eat away the fin stock. When you comb out bent fin sections, set the comb to 16 fins per inch."
+    },
+    {
+      "id": "chunk::rtu20::hail-guards",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.8 Hail Guards",
+      "page": 15,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "In areas that get hail, fit louvered hail guards over the condenser coil. Check them after storms, since crushed louvers block airflow and drive up head pressure. The guards do add about 3 percent to condensing pressure, but that's still within the design margin."
+    },
+    {
+      "id": "chunk::rtu20::curb-seal",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.9 Roof Curb Sealing",
+      "page": 16,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Check the curb gasket once a year. When supply or return air leaks at the curb, you'll see dust streaks on the curb flashing. A leaking curb wastes conditioned air and can even draw attic air into the return, which overloads your cooling capacity."
+    },
+    {
+      "id": "chunk::rtu20::duct-static",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.7 External Static Pressure",
+      "page": 19,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The RTU-20 blower moves 8000 CFM at up to 1.0 inch w.c. external static. Measure static with probes in the supply and return plenums; if the total comes in above 1.2 inches, that points to duct restrictions, closed dampers, or loaded filters rather than a problem with the unit itself."
+    },
+    {
+      "id": "chunk::rtu20::smoke-detector-test",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "8.2 Smoke Detector",
+      "page": 60,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Test the duct smoke detector every year using canned smoke through the sampling tube. The detector cuts the fan and compressor circuits directly, so once it trips you have to reset it at the detector or the fire panel, not at the thermostat."
+    },
+    {
+      "id": "chunk::rtu20::thermostat-wiring",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "9.1 Field Control Wiring",
+      "page": 62,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Use 18 AWG thermostat wire minimum for runs up to 100 feet. Running it beside line voltage picks up ghost voltages that fake cooling calls, so twist the pairs or use shielded cable. Terminal Y2 stages the second compressor."
+    },
+    {
+      "id": "chunk::rtu20::unit-controller-menu",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "9.2 Unit Controller",
+      "page": 63,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The onboard controller keeps a log of the last 40 faults, each stamped with run hours. To get into the service menu, hold TEST for 3 seconds and enter code 240. The fault history survives power cycles and only clears when you use the CLEAR HIST menu item."
+    },
+    {
+      "id": "chunk::rtu20::staging-logic",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "9.3 Cooling Stages",
+      "page": 64,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Stage 1 runs compressor 1 on low fan; stage 2 brings in compressor 2 and switches to high fan. There's a minimum 3 minute stage-up delay to keep it from short cycling. Both compressors lock out below 55 degrees F outdoor unless the low ambient kit is installed."
+    },
+    {
+      "id": "chunk::rtu20::phase-monitor-settings",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.10 Phase Protection",
+      "page": 30,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The phase monitor trips on 3 percent voltage imbalance, 10 percent under-voltage, or a phase reversal, and it waits 5 minutes before an auto-restart. Write down your imbalance readings, because chronic imbalance above 2 percent cuts compressor motor life in half."
+    },
+    {
+      "id": "chunk::rtu20::disconnect-fusing",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.11 Disconnect and Fusing",
+      "page": 31,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The factory disconnect takes 100 amp class RK5 fuses; MCA is 78 amps and MOP is 90 amps. Always replace all three fuses together even if only one blew, and whenever a fuse fails, check the fuse clips for heat discoloration."
+    },
+    {
+      "id": "chunk::rtu20::transformer-va",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "4.12 Control Power Budget",
+      "page": 32,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The 75 VA control transformer feeds the board, the contactors, and the economizer actuator. If you add field accessories beyond the 15 VA of spare capacity, you'll brown out the gas valve during ignition. The accessory transformer kit, part TR-75X, doubles your capacity."
+    },
+    {
+      "id": "chunk::rtu20::vibration-check",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.8 Vibration Diagnosis",
+      "page": 20,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "A rhythmic thump at blower speed usually means a bad belt splice or debris on the wheel, while a whine that climbs with speed points to the bearings. Check the motor mount bolts first, since they work loose from thermal cycling and can mimic a bearing failure."
+    },
+    {
+      "id": "chunk::rtu20::winter-inspection",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "10.1 Fall Checklist",
+      "page": 66,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Fall checklist: run a combustion analysis, clean the flame sensor, check ignitor resistance, inspect the inducer bearing, inspect the heat exchanger, change the filter, set belt tension, verify economizer changeover, and confirm the drain trap freeze protection."
+    },
+    {
+      "id": "chunk::rtu20::summer-inspection",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "10.2 Spring Checklist",
+      "page": 67,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Spring checklist: rinse the condenser coil, test the capacitor and contactor, verify charge by subcooling, prime the condensate trap and add tablets, check the economizer damper linkage, change the filter, and inspect the blower wheel at dusty sites."
+    },
+    {
+      "id": "chunk::rtu20::supply-fan-vfd-option",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.9 Variable Speed Option",
+      "page": 21,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "On units with the VAV option, a VFD drives the supply blower and holds duct static at 1.5 inches w.c. Don't run it past 60 Hz, since the blower wheel is balanced for direct-line speed. Set the minimum speed at 40 percent so the heat exchanger stays within its limits."
+    },
+    {
+      "id": "chunk::rtu20::powered-exhaust",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.6 Powered Exhaust",
+      "page": 35,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The powered exhaust fan kicks on when the economizer opens past 50 percent, keeping building pressure at 0.03 inches w.c. Each season, check the propeller set screw and the tubing on the building pressure sensor."
+    },
+    {
+      "id": "chunk::rtu20::refrigerant-lines",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "6.6 Refrigerant Line Inspection",
+      "page": 42,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Check the refrigerant line grommets wherever the tubing passes through bulkheads; chafed insulation leads to rub-through leaks in about 5 to 7 years. Oil staining at a joint marks a leak even when the electronic detector stays quiet."
+    },
+    {
+      "id": "chunk::rtu20::mixed-air-freeze",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.7 Winter Damper Limits",
+      "page": 36,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "When it's below 20 degrees F outdoor, hold the economizer to 30 percent open no matter what the CO2 demand asks for. Colder mixed air freezes the evaporator drain pan and can crack the heat exchanger from thermal shock during heating."
+    },
+    {
+      "id": "chunk::rtu20::rooftop-safety",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "1.2 Service Safety",
+      "page": 5,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Lock out the disconnect and confirm there's no voltage before you open any panels; the VFD holds a lethal charge for 5 minutes after power is removed. Wear cut gloves around the coil fins, and use fall protection any time you're within 6 feet of the roof edge."
+    },
+    {
+      "id": "chunk::rtu20::nameplate-rtu",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "1.3 Nameplate Data",
+      "page": 6,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Nameplate specs: 20 tons cooling, 400 MBH heating input, 8000 CFM nominal, R-410A at 14.2 lb per circuit across two circuits, 460V 3-phase. If the serial number ends in -B, the unit came with the factory low ambient kit."
+    },
+    {
+      "id": "chunk::rtu20::filter-pressure-switch",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.10 Filter Monitoring",
+      "page": 17,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The dirty filter switch closes at 0.8 inches w.c. across the filter bank. Only adjust the setpoint wheel after you've put in clean filters and read the baseline drop, which is usually around 0.35 inches at design airflow."
+    },
+    {
+      "id": "chunk::rtu20::belt-storage",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.10 Belt Handling",
+      "page": 22,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Keep spare belts lying flat in a cool cabinet; never hang them on a nail, since that sets a curve into the cord. Match a replacement to the number printed on the belt, BX-38, because measuring a stretched belt gives you the wrong size."
+    },
+    {
+      "id": "chunk::rtu20::coil-freeze-charge",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "6.7 Icing vs Charge",
+      "page": 43,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "If the evaporator ices up, don't just assume it's low and add refrigerant. Melt all the ice, replace the filters, confirm blower airflow, then measure superheat. Low charge shows high superheat, while low airflow shows low superheat. If you charge into an airflow problem, you'll flood the compressor."
+    },
+    {
+      "id": "chunk::rtu20::return-air-bypass",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.11 Return Path Verification",
+      "page": 23,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "High supply static with normal return static tells you the supply duct is restricted. After any alarm event, make sure all the fire dampers are open again; a dropped fire damper curtain can look just like a failed blower and will trip the limit in heating."
+    },
+    {
+      "id": "chunk::rtu20::gas-valve-leak-test",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "7.8 Valve Leak Test",
+      "page": 48,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Once a year, confirm the gas valve is closing fully: with the unit off, hook a manometer downstream and check that there's zero pressure rise over 10 minutes. Any rise means the valve is leaking through, so replace the valve rather than adjusting the regulator to hide it."
+    },
+    {
+      "id": "chunk::rtu20::condensate-winter",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.11 Freeze Protection",
+      "page": 18,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "In climates that go below freezing, either drain the condensate trap each fall or fill it with propylene glycol. A trap that splits from ice will drain condensate into the curb come spring and turn up later as a puzzling roof leak."
+    },
+    {
+      "id": "chunk::rtu20::acoustic-liner",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "3.12 Cabinet Acoustics",
+      "page": 24,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "The liner in the blower compartment soaks up noise. If a section delaminates, replace it instead of just pressing it back down, because loose liner can get pulled into the blower inlet and throw the wheel out of balance."
+    },
+    {
+      "id": "chunk::ahu8::vfd-parameters",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.2 VFD Programming",
+      "page": 28,
+      "assetModel": "VentMax AHU-8",
+      "text": "Key VFD settings: acceleration 60 seconds, deceleration 90 seconds, minimum speed 30 percent, maximum 60 Hz, and carrier frequency 4 kHz. A higher carrier frequency makes the motor quieter, but it also adds heat to both the drive and the motor."
+    },
+    {
+      "id": "chunk::ahu8::vfd-bypass",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.3 Bypass Operation",
+      "page": 29,
+      "assetModel": "VentMax AHU-8",
+      "text": "If the drive fails, the VFD bypass contactor runs the fan at full speed. In bypass you still need the duct static safety wired in, because without modulation the fan can over-pressurize the VAV boxes. Test bypass operation once a year."
+    },
+    {
+      "id": "chunk::ahu8::duct-static-setpoint",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.4 Static Pressure Control",
+      "page": 30,
+      "assetModel": "VentMax AHU-8",
+      "text": "The VFD modulates to hold 1.5 inches w.c. of duct static, sensed two-thirds of the way down the main trunk. If every VAV damper is below 80 percent open, use trim-and-respond to reset the setpoint downward and save fan energy."
+    },
+    {
+      "id": "chunk::ahu8::fan-surge",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.5 Fan Surge",
+      "page": 31,
+      "assetModel": "VentMax AHU-8",
+      "text": "A rumbling or pulsing fan at low airflow is a sign of surge, meaning the fan is riding the peak of its curve. Fix it by raising the minimum VFD speed or opening the discharge damper. Left running, continuous surge fatigues the fan wheel and the shaft welds."
+    },
+    {
+      "id": "chunk::ahu8::bearing-grease-spec",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.3 Bearing Lubrication",
+      "page": 35,
+      "assetModel": "VentMax AHU-8",
+      "text": "Grease the fan bearings every 2000 run hours with NLGI 2 lithium-complex grease, two pumps per bearing, while the fan is running. Wipe the zerks first, since grit forced in will destroy a bearing faster than no grease at all. Keep the purge relief ports clear."
+    },
+    {
+      "id": "chunk::ahu8::bearing-temperature",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.5 Bearing Condition",
+      "page": 38,
+      "assetModel": "VentMax AHU-8",
+      "text": "If a bearing housing runs above 160 degrees F, or climbs 30 degrees over its baseline, the bearing is starting to fail. Check it monthly with an IR thermometer at the same spot and log the readings so you catch the trend before you can hear it."
+    },
+    {
+      "id": "chunk::ahu8::belt-matched-set",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.6 Belt Replacement",
+      "page": 39,
+      "assetModel": "VentMax AHU-8",
+      "text": "Replace the dual B-section belts together as a matched set, part 2/B68. If you mix an old belt with a new one, they don't share the load evenly and the new belt ends up carrying all of it. Tension to 3/4 inch deflection at 8 lb mid-span, then re-check after 24 hours of running."
+    },
+    {
+      "id": "chunk::ahu8::sheave-wear",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.7 Sheave Inspection",
+      "page": 40,
+      "assetModel": "VentMax AHU-8",
+      "text": "Check the sheave grooves with a groove gauge; a dished sidewall lets the belt bottom out and slip no matter how you tension it. Replace any sheave that's shiny at the bottom of the groove. Align the sheaves within 1/16 inch using a laser tool or a straightedge."
+    },
+    {
+      "id": "chunk::ahu8::motor-replacement",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.8 Supply Fan Motor",
+      "page": 41,
+      "assetModel": "VentMax AHU-8",
+      "text": "The supply fan motor is 15 HP, 1770 RPM, premium efficiency, inverter-duty rated, with a shaft grounding ring. Any replacement has to be inverter-duty too, because a standard motor will fail from VFD-induced bearing currents within two years."
+    },
+    {
+      "id": "chunk::ahu8::prefilter-schedule",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.2 Pre-filter Service",
+      "page": 19,
+      "assetModel": "VentMax AHU-8",
+      "text": "Change the MERV-8 pre-filters at 0.5 inches w.c. differential or every 90 days, whichever comes first. Load them with the pleats vertical; horizontal pleats sag once they load up and open bypass gaps at the frame."
+    },
+    {
+      "id": "chunk::ahu8::final-filter-schedule",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.3 Final Filter Service",
+      "page": 20,
+      "assetModel": "VentMax AHU-8",
+      "text": "MERV-13 final filters last 6 to 12 months when they sit behind fresh pre-filters. Replace them at 1.2 inches w.c. Gasket-seal each cell against the holding frame, since even a 1/8 inch bypass gap wipes out the full MERV rating on that cell."
+    },
+    {
+      "id": "chunk::ahu8::filter-gauge",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.4 Filter Monitoring",
+      "page": 21,
+      "assetModel": "VentMax AHU-8",
+      "text": "Each filter bank has its own differential pressure gauge. Record the readings monthly and after every filter change so you have a clean baseline. If a reading drops without any service being done, a filter cell has blown out and air is bypassing it."
+    },
+    {
+      "id": "chunk::ahu8::chw-valve-stroke",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.2 Valve Commissioning",
+      "page": 42,
+      "assetModel": "VentMax AHU-8",
+      "text": "Each spring, stroke the chilled water valve from 0 to 100 percent from the BMS. Confirm the actuator hits both ends within 90 seconds and that the feedback signal tracks the command within 3 percent. Exercising it this way keeps the stem from seizing."
+    },
+    {
+      "id": "chunk::ahu8::chw-coil-airbound",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.3 Air-bound Coil",
+      "page": 43,
+      "assetModel": "VentMax AHU-8",
+      "text": "If the discharge air stays warm with the valve open but the supply pipe is cold, the coil is probably air-bound. Bleed the manual air vent at the top header of the coil until water runs out solid. If it keeps binding, the loop's air separator needs service."
+    },
+    {
+      "id": "chunk::ahu8::chw-coil-backflush",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.4 Coil Flushing",
+      "page": 44,
+      "assetModel": "VentMax AHU-8",
+      "text": "A rising water-side pressure drop with a falling delta-T means the coil is fouling internally. Isolate it and backflush against normal flow direction. If flushing recovers performance, add a 20 mesh strainer upstream, because the debris will come back."
+    },
+    {
+      "id": "chunk::ahu8::hot-water-coil",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.5 Heating Coil",
+      "page": 45,
+      "assetModel": "VentMax AHU-8",
+      "text": "The single-row hot water preheat coil warms up the mixed air whenever it drops below 45 degrees F. For freeze protection, its valve is designed to fail open if it loses its signal. Each fall, confirm that fail-open action by pulling the signal wire while the pump is running."
+    },
+    {
+      "id": "chunk::ahu8::freeze-stat-mounting",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.6 Freeze Stat Placement",
+      "page": 46,
+      "assetModel": "VentMax AHU-8",
+      "text": "The 20 foot averaging freeze stat snakes back and forth across the coil face on nylon clips so it covers every square foot. If any 18 inch stretch of it senses below 38 degrees F, it trips the fan. Never leave unused element coiled up behind a bracket, because there it reads the wrong air."
+    },
+    {
+      "id": "chunk::ahu8::coil-cleaning-airside",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "6.7 Coil Surface Cleaning",
+      "page": 47,
+      "assetModel": "VentMax AHU-8",
+      "text": "Clean coil faces annually with a vacuum and soft brush before wet cleaning, pushing dirt out the way it came in. Stiff brushes bend fins, and that lost capacity costs more than the dirt did, so use straightening combs at 12 fins per inch."
+    },
+    {
+      "id": "chunk::ahu8::damper-linkage",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "7.3 Damper Linkage",
+      "page": 50,
+      "assetModel": "VentMax AHU-8",
+      "text": "Once a year, check the damper blade edge seals and the jackshaft set screws. The blades need to close within 2 degrees of fully shut. If you can see daylight through a closed outdoor damper, you're wasting heating energy and risking a frozen preheat coil."
+    },
+    {
+      "id": "chunk::ahu8::damper-actuator-spring",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "7.4 Actuator Testing",
+      "page": 51,
+      "assetModel": "VentMax AHU-8",
+      "text": "The outdoor and relief dampers run on spring-return actuators that drive themselves closed when they lose power. To test them, cut actuator power at TB-4 and watch for full closure within 60 seconds. If an actuator stalls partway through its stroke, replace it, because winter air will find that gap."
+    },
+    {
+      "id": "chunk::ahu8::mixed-air-stratification",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "7.5 Mixed Air Temperature",
+      "page": 52,
+      "assetModel": "VentMax AHU-8",
+      "text": "Cold outdoor air stratifies along the plenum floor and fools a single-point sensor, so the mixed air sensor must be an averaging element mounted diagonally across the plenum. Stratification trips freeze stats even when the average temperature is safe."
+    },
+    {
+      "id": "chunk::ahu8::economizer-sequence",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "7.6 Economizer Sequence",
+      "page": 53,
+      "assetModel": "VentMax AHU-8",
+      "text": "When outdoor air drops below 60 degrees F dry bulb, the mixing dampers modulate to give you free cooling. Check the sequence carefully: the chilled water valve should stay closed until the dampers hit 100 percent. If you catch it heating and cooling at the same time, the sequence is miswired."
+    },
+    {
+      "id": "chunk::ahu8::smoke-damper-test",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "8.2 Life Safety Dampers",
+      "page": 57,
+      "assetModel": "VentMax AHU-8",
+      "text": "Per NFPA, the fire-smoke dampers in both the supply and return need a cycle test every 4 years. Coordinate with the fire alarm contractor to run it, since these dampers close when a detector trips and the fan interlocks off through TB-4."
+    },
+    {
+      "id": "chunk::ahu8::fan-interlock",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "8.3 Safety Interlock Chain",
+      "page": 58,
+      "assetModel": "VentMax AHU-8",
+      "text": "The fan run circuit runs in series through the freeze stat, smoke detector, high static switch, and condensate float. If you jumper any safety to troubleshoot, log it and remove it the same day. Chronic nuisance trips have a root cause, so find it."
+    },
+    {
+      "id": "chunk::ahu8::high-static-switch",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "8.4 High Static Cutout",
+      "page": 59,
+      "assetModel": "VentMax AHU-8",
+      "text": "The high static safety opens at 4 inches w.c. of plenum pressure to protect the ductwork in case the smoke dampers slam shut while the fan is up to speed. Test it yearly by slowly covering the sensing port, and the fan should stop within 2 seconds."
+    },
+    {
+      "id": "chunk::ahu8::dat-sensor-cal",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "10.1 Sensor Calibration",
+      "page": 65,
+      "assetModel": "VentMax AHU-8",
+      "text": "Every year, calibrate the discharge air, mixed air, and return air sensors against a certified reference, all sitting in the same airstream. If any offset is more than 0.5 degrees F, correct it in the BMS. Keep in mind, your control loops are only as good as the sensors feeding them."
+    },
+    {
+      "id": "chunk::ahu8::humidity-sensor",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "10.2 Humidity Elements",
+      "page": 66,
+      "assetModel": "VentMax AHU-8",
+      "text": "Capacitive humidity sensors drift about 1 to 2 percent RH every year. Either verify them with a salt-solution calibration kit or just swap the elements every 3 years. The return air element is what drives dehumidification, so if it reads high it will overcool the space."
+    },
+    {
+      "id": "chunk::ahu8::co2-sensor-ahu",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "10.3 CO2 Monitoring",
+      "page": 67,
+      "assetModel": "VentMax AHU-8",
+      "text": "The return CO2 sensor resets outdoor air between 15 and 30 percent as occupancy rises. Self-calibrating sensors need one unoccupied period below 450 ppm each week; in 24-7 buildings that never empty, do a manual calibration once a year instead."
+    },
+    {
+      "id": "chunk::ahu8::bms-points-list",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "10.4 BMS Points",
+      "page": 68,
+      "assetModel": "VentMax AHU-8",
+      "text": "The AHU-8 puts out 38 points: temperatures, static, VFD speed and power, valve and damper commands with their feedback, filter status, and every safety state. Trend the fan speed, static, and valve position at 5 minute intervals, and drift becomes a lot easier to spot."
+    },
+    {
+      "id": "chunk::ahu8::uv-lights",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.5 UV Coil Lamps",
+      "page": 22,
+      "assetModel": "VentMax AHU-8",
+      "text": "The optional UV-C lamps face the chilled water coil to prevent biofilm. Replace them annually, since output halves even while the lamp still glows. Always kill lamp power before opening access doors, because UV-C burns eyes and skin in seconds."
+    },
+    {
+      "id": "chunk::ahu8::drain-pan-slope",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.6 Drain Pan",
+      "page": 23,
+      "assetModel": "VentMax AHU-8",
+      "text": "The stainless drain pan slopes toward a 1.25 inch drain, with a 4 inch deep trap since this is a draw-through unit. If water is still standing more than 1 hour after shutdown, you've got either a fouled trap or a reverse slope from an isolation spring that settled under the unit."
+    },
+    {
+      "id": "chunk::ahu8::isolation-springs",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.9 Vibration Isolation",
+      "page": 48,
+      "assetModel": "VentMax AHU-8",
+      "text": "The fan assembly rides on four 2 inch deflection springs. Check that the ride height is even, within 1/8 inch, because a bottomed-out spring dumps vibration straight into the floor slab. The flex duct connectors should have about 1 inch of slack, never pulled drum-tight."
+    },
+    {
+      "id": "chunk::ahu8::sound-attenuators",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.7 Sound Attenuators",
+      "page": 24,
+      "assetModel": "VentMax AHU-8",
+      "text": "When clean, the duct silencers at the fan discharge add about 0.3 inches w.c. of pressure drop. Inspect the perforated liners each year, since loaded-up baffles add resistance and start shedding fibers downstream. Vacuum the silencer media only, and never wet-clean it."
+    },
+    {
+      "id": "chunk::ahu8::access-doors",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.8 Access and Gaskets",
+      "page": 25,
+      "assetModel": "VentMax AHU-8",
+      "text": "Hinged access doors seal against neoprene bulb gaskets. A whistling door leaks about 5 percent of design airflow at 4 inches static. Adjust the latches to compress the gasket 50 percent and replace flattened bulbs, since a leak upstream of the filters bypasses filtration."
+    },
+    {
+      "id": "chunk::ahu8::seasonal-changeover",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "11.1 Seasonal Changeover",
+      "page": 70,
+      "assetModel": "VentMax AHU-8",
+      "text": "For heating changeover, confirm the preheat valve fails open, run the freeze stat trip test, set the damper minimum position, and check glycol strength if you use it. For cooling changeover, stroke the chilled water valve, prime the drain trap, test the condensate float, and clean the coil face."
+    },
+    {
+      "id": "chunk::ahu8::glycol-preheat",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "11.2 Glycol Loop",
+      "page": 71,
+      "assetModel": "VentMax AHU-8",
+      "text": "In freeze-risk climates the preheat coil runs on 40 percent propylene glycol. Check the concentration every fall, because when a coil freezes despite glycol, dilution from makeup water is usually the reason. Aim for burst protection down to minus 10 degrees F."
+    },
+    {
+      "id": "chunk::ahu8::strainer-blowdown",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "11.3 Hydronic Strainers",
+      "page": 72,
+      "assetModel": "VentMax AHU-8",
+      "text": "Blow down the chilled and hot water strainers quarterly. A rising strainer differential mimics a failing control valve, with sluggish response and unmet setpoints. Log the differential pressure across each strainer at every service visit."
+    },
+    {
+      "id": "chunk::ahu8::balancing-dampers",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "12.1 Air Balancing",
+      "page": 75,
+      "assetModel": "VentMax AHU-8",
+      "text": "The branch balancing dampers were set at commissioning and marked with paint pens. Don't move them to chase a single-room complaint, because re-balancing one branch throws off all the others. Confirm total airflow with a pitot traverse before you ever touch a branch damper."
+    },
+    {
+      "id": "chunk::ahu8::pitot-traverse",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "12.2 Airflow Verification",
+      "page": 76,
+      "assetModel": "VentMax AHU-8",
+      "text": "Run your duct traverse in the straight run 8 diameters downstream of the fan, using a 25-point grid, and multiply average velocity by area. Design flow is 12,000 CFM at 1.5 inches static. If field flow lands within 10 percent of design, you're good."
+    },
+    {
+      "id": "chunk::ahu8::motor-current-log",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "12.3 Motor Trending",
+      "page": 77,
+      "assetModel": "VentMax AHU-8",
+      "text": "Log the motor amps at a fixed VFD speed once a month. If the amps climb at the same speed and static, something is dragging mechanically: bearings, belt tension, or buildup on the wheel. If static falls at the same speed, look for duct leakage or an access door left open."
+    },
+    {
+      "id": "chunk::ahu8::ir-scan",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "12.4 Thermographic Inspection",
+      "page": 78,
+      "assetModel": "VentMax AHU-8",
+      "text": "Once a year, scan the VFD cabinet, motor connections, and disconnect under full load. Any connection running 15 degrees C hotter than its neighbors needs cleaning and a re-torque. Vacuum the VFD heat sink fins too, because a clogged sink derates the drive when summer heat hits."
+    },
+    {
+      "id": "chunk::ahu8::megger-ahu",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "12.5 Insulation Testing",
+      "page": 79,
+      "assetModel": "VentMax AHU-8",
+      "text": "Megger the fan motor every year at 1000 VDC with the VFD disconnected. Above 100 megohms is healthy; below 5 means go looking for moisture. Motors sitting in humid plenums do better with winter space-heater strips, so verify that strip circuit every fall."
+    },
+    {
+      "id": "chunk::ahu8::wheel-cleaning-ahu",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.10 Fan Wheel Maintenance",
+      "page": 49,
+      "assetModel": "VentMax AHU-8",
+      "text": "Inspect the airfoil fan wheel annually. Dust cake sheds unevenly and unbalances the wheel, so clean it with a nylon brush and vacuum. Check the wheel-to-inlet-cone overlap of 3/8 inch, since the wrong overlap costs 10 percent of airflow."
+    },
+    {
+      "id": "chunk::ahu8::shaft-alignment",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.11 Shaft and Hub",
+      "page": 50,
+      "assetModel": "VentMax AHU-8",
+      "text": "Check the taper-lock bushing torque on the fan hub every year, 30 ft-lb on the 2517 bushing. A loose bushing frets the shaft and lets you know with a rhythmic click at wheel speed. Never hammer a bushing off; heat the hub to 200 degrees F to remove it."
+    },
+    {
+      "id": "chunk::ahu8::plenum-inspection",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.9 Plenum Housekeeping",
+      "page": 26,
+      "assetModel": "VentMax AHU-8",
+      "text": "Keep the mixing plenum floor free of debris, because loose paper and leaves get pulled into the filter bank and can blind it in a matter of hours. If there's a plenum drain, make sure it's trapped, since an untrapped drain is really just an unfiltered air leak."
+    },
+    {
+      "id": "chunk::ahu8::filter-frame-repair",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.10 Holding Frame Repair",
+      "page": 27,
+      "assetModel": "VentMax AHU-8",
+      "text": "Bent filter holding frames let air leak around the cells. Straighten the rails and replace any missing spring clips, part CLIP-88, running at least four per cell. Where a frame is too worn to seal on its own, foam tape on the rail face restores the gasket line."
+    },
+    {
+      "id": "chunk::ahu8::winter-startup-ahu",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "11.4 Cold Weather Start",
+      "page": 73,
+      "assetModel": "VentMax AHU-8",
+      "text": "For a cold morning start, follow this order: open the preheat valve, set the dampers to minimum, bring the fan to 30 percent, then ramp up once the mixed air climbs above 45 degrees F. Slamming straight to full speed with a cold plenum will trip the freeze stat and thermal-shock the chilled water coil."
+    },
+    {
+      "id": "chunk::ahu8::fan-rotation",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.6 Rotation Check",
+      "page": 32,
+      "assetModel": "VentMax AHU-8",
+      "text": "Any time you replace a motor or VFD, double-check that the fan spins the way the arrow on the housing shows. A backward centrifugal fan still moves roughly half its rated air, which is enough to fool a quick glance, so confirm the rotation with your own eyes at low speed."
+    },
+    {
+      "id": "chunk::ahu8::spare-parts",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "13.1 Recommended Spares",
+      "page": 82,
+      "assetModel": "VentMax AHU-8",
+      "text": "Good spares to keep on site: one matched belt set 2/B68, enough pre-filters and final filters for a single change, two pillow-block bearings BRG-224, one damper actuator, a freeze stat element FS-20A, and a set of holding-frame clips CLIP-88."
+    },
+    {
+      "id": "chunk::ahu8::warranty-service",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "13.2 Service Records",
+      "page": 83,
+      "assetModel": "VentMax AHU-8",
+      "text": "Warranty claims only hold up with documented maintenance: filter changes, bearing lubrication dates, belt tension checks, and sensor calibrations. Keep the records in the pouch on the control cabinet door, and mirror them in the CMMS so nothing gets lost."
+    },
+    {
+      "id": "chunk::ahu8::nameplate-ahu",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "1.2 Unit Data",
+      "page": 6,
+      "assetModel": "VentMax AHU-8",
+      "text": "Nameplate specs: 12,000 CFM supply, 15 HP supply motor, 460V 3-phase, an 8-row chilled water coil at 240 GPM design, and a 1-row hot water preheat at 60 GPM. You'll find the serial plate inside the fan section access door, on the left rail."
+    },
+    {
+      "id": "chunk::rtu20::musty-odor",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.12 Musty Odor Troubleshooting",
+      "page": 19,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "A musty or mildew-like smell coming off the supply vents right after the compressor kicks on is almost always something biological: algae or slime in the condensate pan, a fouled trap sitting full of stagnant water, or biofilm on the evaporator coil face. Flush out the pan and trap, drop in fresh algaecide tablets, and wash the coil with a no-rinse evaporator cleaner. The smell should clear within a day; if it comes right back, check the trap depth, because a dry or shallow trap lets the pan water go stagnant."
+    },
+    {
+      "id": "chunk::ahu8::musty-odor",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.11 Odor Complaints",
+      "page": 28,
+      "assetModel": "VentMax AHU-8",
+      "text": "When occupants complain of a musty, earthy, or mildew smell at startup, it usually traces back to biofilm on the chilled water coil, stagnant water in the drain pan, or filter media that soaked up moisture and stayed wet through a shutdown. Make sure the pan drains fully within an hour of shutdown, treat the trap, and replace any filter bank that got wetted. Units with the UV-C lamp option rarely grow coil biofilm, so check through the viewport that the lamps are actually lit."
+    },
+    {
+      "id": "chunk::rtu20::interior-drips",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.13 Interior Drips After Winter",
+      "page": 20,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Condensate staining on interior ceilings under a rooftop unit as the weather warms up usually isn't the roof failing. A trap or drain pan that froze and cracked over the winter dumps meltwater and condensate into the curb, and that shows up indoors as a mystery wet patch nowhere near any visible plumbing. Check the trap and pan for hairline splits, verify the pan slope, re-prime the trap, and replace any cracked fittings before cooling season."
+    },
+    {
+      "id": "chunk::ahu8::pulsating-noise",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "4.7 Rhythmic Noise Diagnosis",
+      "page": 33,
+      "assetModel": "VentMax AHU-8",
+      "text": "When a supply fan starts putting out a breathing, pulsating drone - that sound that swells and fades in a steady rhythm, and is most noticeable at reduced speed - it's running in surge. The wheel is riding the peak of its curve at low airflow, so it keeps stalling and recovering over and over. Raise the VFD minimum, open the discharge damper, or check that the VAV boxes haven't all closed at once. Let it run in surge too long and it fatigues the wheel and the shaft welds."
+    },
+    {
+      "id": "chunk::rtu20::return-grille-filters",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "2.14 Return Grille Filters",
+      "page": 21,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Units with field-installed return grilles use four 16x25x2 MERV-8 pleated filters that drop into the grille frames. Change these pleated filters on the same schedule as the main filter bank, and jot the size down on the service tag."
+    },
+    {
+      "id": "chunk::ahu8::oa-hood-filters",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.12 Outdoor Air Hood Filters",
+      "page": 29,
+      "assetModel": "VentMax AHU-8",
+      "text": "The outdoor air intake hood holds two 18x24x2 MERV-8 pleated filters. Swap them each season and note the size on the service tag so the next tech knows what to order."
+    },
+    {
+      "id": "chunk::ahu8::access-cell-filters",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "3.13 Side Access Cell Filters",
+      "page": 30,
+      "assetModel": "VentMax AHU-8",
+      "text": "The side access cell holds three 12x24x2 MERV-8 pleated filters. Swap them each season and note the size on the service tag so the next tech knows what to order."
+    },
+    {
+      "id": "chunk::rtu20::exhaust-fan-grease",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.8 Exhaust Fan Bearings",
+      "page": 37,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Hit the powered exhaust fan bearings with grease every 4000 operating hours, using two pumps of NLGI 2 lithium grease. Wipe the zerk fittings clean first so you don't drive grit in, and log the service hours in the maintenance record."
+    },
+    {
+      "id": "chunk::rtu20::jackshaft-grease",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "5.9 Economizer Jackshaft Bearings",
+      "page": 38,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Hit the economizer jackshaft bearings with grease every 750 operating hours, using one pump of NLGI 2 lithium grease. Wipe the zerk fittings clean first so you don't drive grit in, and log the service hours in the maintenance record."
+    },
+    {
+      "id": "chunk::ahu8::legacy-motor-grease",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.12 Legacy Motor Bearings",
+      "page": 51,
+      "assetModel": "VentMax AHU-8",
+      "text": "Units built before 2019 have greaseable supply fan motor bearings. Grease them every 6000 operating hours with two pumps of NLGI 2 lithium grease. Wipe the zerk fittings clean before you grease, and log the service hours in the maintenance record."
+    },
+    {
+      "id": "chunk::rtu20::curb-bolt-torque",
+      "manualTitle": "ThermaFlow RTU-20 Maintenance Guide",
+      "section": "1.4 Curb Mounting Bolts",
+      "page": 7,
+      "assetModel": "ThermaFlow RTU-20",
+      "text": "Tighten the curb mounting bolts to 85 ft-lb, working in a cross pattern. Re-torque them after the first month of operation, and check them again at each seasonal inspection."
+    },
+    {
+      "id": "chunk::ahu8::coupling-torque",
+      "manualTitle": "VentMax AHU-8 Operation Manual",
+      "section": "5.13 Fan Hub Set Screws",
+      "page": 52,
+      "assetModel": "VentMax AHU-8",
+      "text": "Tighten the fan hub set screws to 65 ft-lb, working in a cross pattern. Re-torque them after the first week of operation, and check them again at each seasonal inspection."
+    },
+    {
+      "id": "chunk::ac5000::fan-stage2-pressure",
+      "manualTitle": "AeroCool AC-5000 Service Manual",
+      "section": "4.11 Condenser Fan Staging",
+      "page": 41,
+      "assetModel": "AeroCool AC-5000",
+      "text": "The second condenser fan stages on when discharge pressure climbs to 380 psig and stages back off at 300 psig. Verify those staging pressures with calibrated gauges at each seasonal inspection."
+    }
+  ],
+  "serviceHistory": [
+    {
+      "id": "svc::A-204::2025-09-14",
+      "assetTag": "A-204",
+      "date": "2025-09-14",
+      "summary": "Quarterly PM. Cleaned condenser coil, checked subcooling (11°F, good), re-torqued compressor mounting bolts to 35 ft-lb. No faults.",
+      "technician": "M. Alvarez"
+    },
+    {
+      "id": "svc::A-204::2026-01-22",
+      "assetTag": "A-204",
+      "date": "2026-01-22",
+      "summary": "Responded to E04 fault. Found loose RS-485 connector at VFD. Reseated harness, fault cleared. Verified termination resistors present.",
+      "technician": "J. Park"
+    },
+    {
+      "id": "svc::B-110::2025-11-03",
+      "assetTag": "B-110",
+      "date": "2025-11-03",
+      "summary": "Replaced all four MERV-8 filters and flushed condensate drain. Belt showing glazing, flagged for replacement next visit.",
+      "technician": "M. Alvarez"
+    },
+    {
+      "id": "svc::B-110::2026-05-18",
+      "assetTag": "B-110",
+      "date": "2026-05-18",
+      "summary": "Coil freeze-up call. Found low airflow from clogged filters plus a stuck compressor contactor running continuously. Replaced contactor, thawed coil, confirmed airflow.",
+      "technician": "J. Park"
+    },
+    {
+      "id": "svc::C-302::2026-03-09",
+      "assetTag": "C-302",
+      "date": "2026-03-09",
+      "summary": "Annual PM. Replaced final filters, greased fan bearings, bled chilled water coil. VFD min speed confirmed at 30 Hz.",
+      "technician": "S. Whitfield"
+    }
+  ],
+  "parts": [
+    {
+      "id": "part::CAP-440-40",
+      "partNumber": "CAP-440-40",
+      "description": "Run capacitor, 40 microfarad, 440V (compressor)",
+      "quantityOnHand": 6,
+      "binLocation": "Van shelf B2",
+      "warehouseQty": 16,
+      "unit": "ea"
+    },
+    {
+      "id": "part::CAP-440-7R5",
+      "partNumber": "CAP-440-7R5",
+      "description": "Run capacitor, 7.5 microfarad, 440V (condenser fan)",
+      "quantityOnHand": 9,
+      "binLocation": "Van shelf B2",
+      "warehouseQty": 14,
+      "unit": "ea"
+    },
+    {
+      "id": "part::CONT-24-30",
+      "partNumber": "CONT-24-30",
+      "description": "Compressor contactor, 24VAC coil, 30A",
+      "quantityOnHand": 4,
+      "binLocation": "Van shelf B3",
+      "warehouseQty": 6,
+      "unit": "ea"
+    },
+    {
+      "id": "part::FILT-2025-M8",
+      "partNumber": "FILT-2025-M8",
+      "description": "Pleated air filter, 20x25x2, MERV-8",
+      "quantityOnHand": 24,
+      "binLocation": "Warehouse rack A1",
+      "warehouseQty": 4,
+      "unit": "ea"
+    },
+    {
+      "id": "part::FILT-2424-M13",
+      "partNumber": "FILT-2424-M13",
+      "description": "Final filter, 24x24x12, MERV-13",
+      "quantityOnHand": 8,
+      "binLocation": "Warehouse rack A2",
+      "warehouseQty": 9,
+      "unit": "ea"
+    },
+    {
+      "id": "part::BELT-BX38",
+      "partNumber": "BELT-BX38",
+      "description": "V-belt, A-section, BX-38",
+      "quantityOnHand": 5,
+      "binLocation": "Van shelf C1",
+      "warehouseQty": 11,
+      "unit": "ea"
+    },
+    {
+      "id": "part::DRIER-165S",
+      "partNumber": "DRIER-165S",
+      "description": "Liquid-line filter drier, 165S series",
+      "quantityOnHand": 3,
+      "binLocation": "Van shelf B4",
+      "warehouseQty": 1,
+      "unit": "ea"
+    },
+    {
+      "id": "part::OIL-POE32",
+      "partNumber": "OIL-POE32",
+      "description": "POE compressor oil, ISO 32, 1 quart",
+      "quantityOnHand": 7,
+      "binLocation": "Warehouse rack D3",
+      "warehouseQty": 4,
+      "unit": "ea"
+    },
+    {
+      "id": "part::R410A-25",
+      "partNumber": "R410A-25",
+      "description": "Refrigerant R-410A, 25 lb cylinder",
+      "quantityOnHand": 2,
+      "binLocation": "Warehouse cage R",
+      "warehouseQty": 13,
+      "unit": "ea"
+    },
+    {
+      "id": "part::GROM-AC5K",
+      "partNumber": "GROM-AC5K",
+      "description": "Vibration isolation grommet kit, AC-5000 compressor",
+      "quantityOnHand": 10,
+      "binLocation": "Van shelf B1",
+      "warehouseQty": 2,
+      "unit": "ea"
+    }
+  ],
+  "jobs": [
+    {
+      "id": "job::wo-4821",
+      "workOrderNumber": "WO-4821",
+      "priority": "High",
+      "status": "In Progress",
+      "timeLabel": "9:00 AM",
+      "window": "9:00-11:00 AM",
+      "title": "E11 high-pressure fault",
+      "assetName": "Rooftop Chiller",
+      "assetTag": "A-204",
+      "assetModel": "AeroCool AC-5000",
+      "site": "North Plant · Bldg 3, Roof",
+      "reported": "Unit repeatedly tripping on high-pressure cutout. E11 latched on the display - no cooling to Zone N since 07:20.",
+      "steps": [
+        "Inspect condenser coil for debris & blockage",
+        "Verify condenser fan motor runs",
+        "Measure head pressure at service port",
+        "Clean coil & clear recirculating airflow",
+        "Cycle main power to reset E11",
+        "Confirm pressures stabilize below 380 psi"
+      ],
+      "stepsDone": [
+        0,
+        1
+      ],
+      "jobParts": [
+        {
+          "name": "R-410A refrigerant",
+          "note": "2.5 lb · used"
+        },
+        {
+          "name": "High-pressure switch HPS-610",
+          "note": "On truck · not yet installed"
+        }
+      ],
+      "clockSeconds": 2517,
+      "routeOrder": 2
+    },
+    {
+      "id": "job::wo-4822",
+      "workOrderNumber": "WO-4822",
+      "priority": "Emergency",
+      "status": "New",
+      "timeLabel": "ASAP",
+      "window": "Respond by 1:00 PM",
+      "title": "No cooling - occupied space",
+      "assetName": "Rooftop AC Unit",
+      "assetTag": "B-110",
+      "assetModel": "ThermaFlow RTU-20",
+      "site": "Warehouse · Bldg 1, Roof",
+      "reported": "Warehouse office reporting no cooling - space temp 84°F and rising. The condenser fan isn't spinning up. Occupied space, priority response requested.",
+      "steps": [
+        "Confirm thermostat is calling for cooling",
+        "Check main disconnect & breakers",
+        "Inspect contactor & run capacitor",
+        "Verify refrigerant charge"
+      ],
+      "stepsDone": [],
+      "jobParts": [
+        {
+          "name": "Run capacitor, 7.5 µF (condenser fan)",
+          "note": "CAP-440-7R5 · needed"
+        }
+      ],
+      "clockSeconds": 0,
+      "routeOrder": 1,
+      "requiredPart": "CAP-440-7R5",
+      "demoPrompts": [
+        "The RTU-20 has no cooling and the condenser fan won't start - where should I begin?",
+        "Which run capacitor does the condenser fan use, and do I have one on my van?"
+      ]
+    },
+    {
+      "id": "job::wo-4809",
+      "workOrderNumber": "WO-4809",
+      "priority": "Routine",
+      "status": "Scheduled",
+      "timeLabel": "11:30 AM",
+      "window": "11:30 AM-12:30 PM",
+      "title": "Quarterly preventive maintenance",
+      "assetName": "Air Handler",
+      "assetTag": "C-302",
+      "assetModel": "VentMax AHU-8",
+      "site": "Office Wing · Bldg 2, Mech 2B",
+      "reported": "Scheduled quarterly preventive maintenance. Standard air-handler service checklist.",
+      "steps": [
+        "Replace return-air filters",
+        "Inspect belt tension & pulleys",
+        "Lubricate motor bearings",
+        "Check condensate drain & pan",
+        "Log meter readings"
+      ],
+      "stepsDone": [],
+      "jobParts": [
+        {
+          "name": "Return filter 20×25×4",
+          "note": "FLT-2025 · x2"
+        }
+      ],
+      "clockSeconds": 0,
+      "routeOrder": 3
+    },
+    {
+      "id": "job::wo-4790",
+      "workOrderNumber": "WO-4790",
+      "priority": "Low",
+      "status": "Completed",
+      "timeLabel": "8:15 AM",
+      "window": "Done 8:40 AM",
+      "title": "Filter replacement",
+      "assetName": "Air Handler",
+      "assetTag": "C-118",
+      "assetModel": "VentMax AHU-8",
+      "site": "Office Wing · Bldg 2",
+      "reported": "Routine filter replacement - completed and signed off.",
+      "steps": [
+        "Replace return filters",
+        "Log reading"
+      ],
+      "stepsDone": [
+        0,
+        1
+      ],
+      "jobParts": [
+        {
+          "name": "Return filter 16×20×1",
+          "note": "x1 · used"
+        }
+      ],
+      "clockSeconds": 1500,
+      "routeOrder": 0
+    },
+    {
+      "id": "job::wo-4830",
+      "workOrderNumber": "WO-4830",
+      "priority": "High",
+      "status": "New",
+      "timeLabel": "2:30 PM",
+      "window": "Today, 2:00 - 4:00 PM",
+      "title": "Musty smell from supply vents",
+      "assetName": "Air Handler",
+      "assetTag": "C-302",
+      "assetModel": "VentMax AHU-8",
+      "site": "Office Wing · Bldg 2, Mech 2B",
+      "reported": "East-wing occupants report a musty, mildew-like smell from the supply vents when the air handler starts up each morning. Airflow also feels weak.",
+      "steps": [
+        "Inspect chilled-water coil and drain pan for biofilm",
+        "Prime and flush the condensate trap",
+        "Replace the final filters",
+        "Verify airflow after service"
+      ],
+      "stepsDone": [],
+      "jobParts": [
+        {
+          "name": "Final filter, 24x24x12 MERV-13",
+          "note": "FILT-2424-M13 · x2"
+        }
+      ],
+      "clockSeconds": 0,
+      "routeOrder": 4,
+      "requiredPart": "FILT-2424-M13",
+      "demoPrompts": [
+        "Occupants report a musty, mildew smell from the AHU-8 at startup - what usually causes that and how do I fix it?",
+        "I'll swap the final filters while I'm in there - which filter does the AHU-8 take, and do I have them on the van?"
+      ]
+    }
+  ]
+}

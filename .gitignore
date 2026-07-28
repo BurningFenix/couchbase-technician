@@ -1,0 +1,37 @@
+# ── Secrets ─────────────────────────────────────────────────────────────
+# Real credentials live in .env (see .env.example). Never commit these.
+.env
+FieldCopilot/FieldCopilot/Secrets.xcconfig
+FieldDispatcher/capella-config.json
+
+# ── Large vendor SDKs (download separately — see README) ────────────────
+# Couchbase Lite Enterprise xcframeworks: ~300 MB, and their dSYMs exceed
+# GitHub's file-size limits.
+FieldCopilot/couchbase-lite-swift_xc_enterprise_4/
+FieldCopilot/couchbase-lite-vector-search_xcframework_2/
+
+# ── Bundled embedding model (1.1 GB — far over GitHub's 100 MB limit) ───
+# Exported separately; see README for how to obtain or re-export it.
+FieldCopilot/Qwen3Embedding/*.aimodel/
+FieldCopilot/Qwen3Embedding/*.aimodelc/
+
+# ── Build artifacts ─────────────────────────────────────────────────────
+.build/
+build/
+DerivedData/
+*.xcuserdatad
+xcuserdata/
+*.xcworkspace/xcuserdata/
+
+# ── Local Couchbase Lite databases ──────────────────────────────────────
+*.cblite2/
+cblogs/
+
+# ── macOS ───────────────────────────────────────────────────────────────
+.DS_Store
+
+# ── Local agent settings ────────────────────────────────────────────────
+.claude/settings.local.json
+
+# Leftover nested git repo from an early scaffold (moved aside, not deleted)
+FieldCopilot/.git.disabled-scaffold/

@@ -1,0 +1,18 @@
+# Xcode
+*.xcuserstate
+*.xcuserdatad/
+DerivedData/
+build/
+
+# Secrets
+Secrets.xcconfig
+
+# OS
+.DS_Store
+
+# Large on-device AI model artifacts (regenerate via coreai-torch export)
+Qwen3Embedding/*.aimodel
+Qwen3Embedding/*.aimodelc
+
+# Large on-device LLM (regenerate via coreai.llm.export)
+Qwen4B/

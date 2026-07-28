@@ -1,0 +1,385 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		49A7E2612FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49A7E2602FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework */; };
+		49A7E2622FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 49A7E2602FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		49A7E2652FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */ = {isa = PBXBuildFile; fileRef = 49A7E2642FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework */; };
+		49A7E2662FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 49A7E2642FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
+		AA000310 /* qwen3-embedding-0.6b_float16_s512_static.aimodel in Resources */ = {isa = PBXBuildFile; fileRef = AA000300 /* qwen3-embedding-0.6b_float16_s512_static.aimodel */; };
+		AA000311 /* Qwen3Tokenizer in Resources */ = {isa = PBXBuildFile; fileRef = AA000301 /* Qwen3Tokenizer */; };
+		AA000402 /* Transformers in Frameworks */ = {isa = PBXBuildFile; productRef = AA000401 /* Transformers */; };
+		AA000510 /* MLXLLM in Frameworks */ = {isa = PBXBuildFile; productRef = AA000501 /* MLXLLM */; };
+		AA000511 /* MLXLMCommon in Frameworks */ = {isa = PBXBuildFile; productRef = AA000502 /* MLXLMCommon */; };
+		AA000512 /* MLXHuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = AA000503 /* MLXHuggingFace */; };
+		AA000513 /* HuggingFace in Frameworks */ = {isa = PBXBuildFile; productRef = AA000451 /* HuggingFace */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		49A7E2632FF13DBC0076B295 /* Embed Frameworks */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 10;
+			files = (
+				49A7E2662FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework in Embed Frameworks */,
+				49A7E2622FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework in Embed Frameworks */,
+			);
+			name = "Embed Frameworks";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		49A7E2602FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CouchbaseLiteSwift.xcframework; path = "couchbase-lite-swift_xc_enterprise_4/CouchbaseLiteSwift.xcframework"; sourceTree = "<group>"; };
+		49A7E2642FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcframework; name = CouchbaseLiteVectorSearch.xcframework; path = "couchbase-lite-vector-search_xcframework_2/CouchbaseLiteVectorSearch.xcframework"; sourceTree = "<group>"; };
+		AA000001 /* FieldCopilot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FieldCopilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000200 /* Secrets.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Secrets.xcconfig; path = FieldCopilot/Secrets.xcconfig; sourceTree = "<group>"; };
+		AA000300 /* qwen3-embedding-0.6b_float16_s512_static.aimodel */ = {isa = PBXFileReference; explicitFileType = folder; name = "qwen3-embedding-0.6b_float16_s512_static.aimodel"; path = "Qwen3Embedding/qwen3-embedding-0.6b_float16_s512_static.aimodel"; sourceTree = "<group>"; };
+		AA000301 /* Qwen3Tokenizer */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Qwen3Tokenizer; path = Qwen3Embedding/Qwen3Tokenizer; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		AA000099 /* Exceptions for "FieldCopilot" folder in "FieldCopilot" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+				Secrets.xcconfig,
+			);
+			target = AA000010 /* FieldCopilot */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AA000003 /* FieldCopilot */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				AA000099 /* Exceptions for "FieldCopilot" folder in "FieldCopilot" target */,
+			);
+			path = FieldCopilot;
+			sourceTree = "<group>";
+		};
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AA000020 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				49A7E2652FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework in Frameworks */,
+				49A7E2612FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework in Frameworks */,
+				AA000402 /* Transformers in Frameworks */,
+				AA000510 /* MLXLLM in Frameworks */,
+				AA000511 /* MLXLMCommon in Frameworks */,
+				AA000512 /* MLXHuggingFace in Frameworks */,
+				AA000513 /* HuggingFace in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		49A7E25F2FF13DBC0076B295 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				49A7E2642FF13DDC0076B295 /* CouchbaseLiteVectorSearch.xcframework */,
+				49A7E2602FF13DBC0076B295 /* CouchbaseLiteSwift.xcframework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		49FB9A483008715E003D6EE2 /* Recovered References */ = {
+			isa = PBXGroup;
+			children = (
+				AA000200 /* Secrets.xcconfig */,
+			);
+			name = "Recovered References";
+			sourceTree = "<group>";
+		};
+		AA000002 = {
+			isa = PBXGroup;
+			children = (
+				AA000003 /* FieldCopilot */,
+				AA000300 /* qwen3-embedding-0.6b_float16_s512_static.aimodel */,
+				AA000301 /* Qwen3Tokenizer */,
+				49A7E25F2FF13DBC0076B295 /* Frameworks */,
+				AA000030 /* Products */,
+				49FB9A483008715E003D6EE2 /* Recovered References */,
+			);
+			sourceTree = "<group>";
+		};
+		AA000030 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AA000001 /* FieldCopilot.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AA000010 /* FieldCopilot */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA000060 /* Build configuration list for PBXNativeTarget "FieldCopilot" */;
+			buildPhases = (
+				AA000021 /* Sources */,
+				AA000020 /* Frameworks */,
+				AA000022 /* Resources */,
+				49A7E2632FF13DBC0076B295 /* Embed Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			fileSystemSynchronizedGroups = (
+				AA000003 /* FieldCopilot */,
+			);
+			name = FieldCopilot;
+			packageProductDependencies = (
+				AA000401 /* Transformers */,
+				AA000501 /* MLXLLM */,
+				AA000502 /* MLXLMCommon */,
+				AA000503 /* MLXHuggingFace */,
+				AA000451 /* HuggingFace */,
+			);
+			productName = FieldCopilot;
+			productReference = AA000001 /* FieldCopilot.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AA000000 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+			};
+			buildConfigurationList = AA000050 /* Build configuration list for PBXProject "FieldCopilot" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = AA000002;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				AA000400 /* XCRemoteSwiftPackageReference "swift-transformers" */,
+				AA000450 /* swift-huggingface */,
+				AA000500 /* mlx-swift-lm */,
+			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AA000030 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				AA000010 /* FieldCopilot */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AA000022 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				AA000310 /* qwen3-embedding-0.6b_float16_s512_static.aimodel in Resources */,
+				AA000311 /* Qwen3Tokenizer in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AA000021 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		AA000051 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 6.0;
+			};
+			name = Debug;
+		};
+		AA000052 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				IPHONEOS_DEPLOYMENT_TARGET = 27.0;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		AA000061 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA000200 /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = FieldCopilot/FieldCopilot.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 82X9H6VJ2R;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FieldCopilot/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FieldCopilot needs microphone access to record voice notes for work order creation.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "FieldCopilot uses on-device speech recognition to transcribe your voice notes into work orders.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bu.FieldCopilot;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		AA000062 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA000200 /* Secrets.xcconfig */;
+			buildSettings = {
+				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = FieldCopilot/FieldCopilot.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 82X9H6VJ2R;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = FieldCopilot/Info.plist;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "FieldCopilot needs microphone access to record voice notes for work order creation.";
+				INFOPLIST_KEY_NSSpeechRecognitionUsageDescription = "FieldCopilot uses on-device speech recognition to transcribe your voice notes into work orders.";
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.bu.FieldCopilot;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AA000050 /* Build configuration list for PBXProject "FieldCopilot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000051 /* Debug */,
+				AA000052 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA000060 /* Build configuration list for PBXNativeTarget "FieldCopilot" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA000061 /* Debug */,
+				AA000062 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		AA000450 /* swift-huggingface */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-huggingface.git";
+			requirement = { kind = upToNextMajorVersion; minimumVersion = 0.9.0; };
+		};
+		AA000500 /* mlx-swift-lm */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/ml-explore/mlx-swift-lm";
+			requirement = { kind = upToNextMajorVersion; minimumVersion = 3.31.3; };
+		};
+		AA000400 /* XCRemoteSwiftPackageReference "swift-transformers" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/huggingface/swift-transformers";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		AA000451 /* HuggingFace */ = { isa = XCSwiftPackageProductDependency; package = AA000450 /* swift-huggingface */; productName = HuggingFace; };
+		AA000501 /* MLXLLM */ = { isa = XCSwiftPackageProductDependency; package = AA000500 /* mlx-swift-lm */; productName = MLXLLM; };
+		AA000502 /* MLXLMCommon */ = { isa = XCSwiftPackageProductDependency; package = AA000500 /* mlx-swift-lm */; productName = MLXLMCommon; };
+		AA000503 /* MLXHuggingFace */ = { isa = XCSwiftPackageProductDependency; package = AA000500 /* mlx-swift-lm */; productName = MLXHuggingFace; };
+		AA000401 /* Transformers */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = AA000400 /* XCRemoteSwiftPackageReference "swift-transformers" */;
+			productName = Transformers;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AA000000 /* Project object */;
+}

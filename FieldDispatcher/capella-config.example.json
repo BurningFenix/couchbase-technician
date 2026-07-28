@@ -1,0 +1,5 @@
+{
+  "endpointURL": "wss://YOUR-ID.apps.cloud.couchbase.com:4984/fieldcopilot-endpoint",
+  "username": "tech1",
+  "password": "changeme"
+}
