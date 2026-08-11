@@ -666,7 +666,19 @@ final class DatabaseManager {
         // (fault codes, part numbers) the right chunk is often #1 in FTS
         // only, and dual-listed near-misses crowd it out of the top 5
         // that reach the LLM. Guarantee each mode's #1 a top-5 seat.
-        let guaranteed = [keywordResults.first?.chunkId, vectorResults.first?.chunkId].compactMap(\.self)
+        // Field notes get a guaranteed seat too. They are few, deliberately
+        // written by a technician, and the whole point of the sharing story -
+        // but RRF favors manual chunks that appear in BOTH lists, so a
+        // matching note could land at hybrid #6+ and never reach the model at
+        // all (it would show in the sources sheet and nowhere else).
+        let bestNoteId = finalOrder.first { byId[$0]?.isFieldNote == true }
+
+        var guaranteed: [String] = []
+        for id in [keywordResults.first?.chunkId, vectorResults.first?.chunkId, bestNoteId].compactMap(\.self)
+        where !guaranteed.contains(id) {
+            guaranteed.append(id)
+        }
+
         var promoted: [String] = []
         for id in guaranteed {
             if let idx = finalOrder.firstIndex(of: id), idx >= 5 {
@@ -674,10 +686,12 @@ final class DatabaseManager {
                 promoted.append(id)
             }
         }
-        // Insert at ascending positions (3, then 4) so the second insert
-        // cannot shift the first one back out of the top 5.
+        // Insert at ascending positions ending at 4, so every promoted item
+        // lands inside the top 5 and later inserts cannot push earlier ones
+        // back out (2 promotions -> 3,4; 3 promotions -> 2,3,4).
+        let start = max(0, 5 - promoted.count)
         for (i, id) in promoted.enumerated() {
-            finalOrder.insert(id, at: min(3 + i, finalOrder.count))
+            finalOrder.insert(id, at: min(start + i, finalOrder.count))
         }
 
         return finalOrder.enumerated().compactMap { i, id in

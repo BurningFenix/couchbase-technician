@@ -287,9 +287,12 @@ final class ChatEngine {
                     }
                 )
 
-                let tip = top.first(where: {
-                    $0.result.isFieldNote && $0.result.fieldNoteAuthor != user.displayName
-                })?.result
+                // Surface any field note that reached the sources — including
+                // one this tech saved themselves. (It used to require a
+                // different author, which meant your own note never showed up
+                // after you saved it.) The card labels the author, so a note
+                // from another tech still reads as shared knowledge.
+                let tip = top.first(where: { $0.result.isFieldNote })?.result
 
                 // Job chat: append the agentic parts-stock check, and once the
                 // scripted questions are done, invite the tech to close it out.

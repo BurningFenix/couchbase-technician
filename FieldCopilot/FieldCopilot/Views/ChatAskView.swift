@@ -78,6 +78,7 @@ struct ChatAskView: View {
                     ForEach(engine.messages) { message in
                         MessageRow(
                             message: message,
+                            viewer: engine.activeUser.displayName,
                             showJobActions: message.id == engine.pendingJobCompletionMessageId,
                             openSources: { sourcesFor = message },
                             onComplete: { engine.completeActiveJob() },
@@ -271,6 +272,9 @@ private struct CouchbaseCup: Shape {
 
 private struct MessageRow: View {
     let message: ChatMessage
+    /// Display name of the tech reading the chat, for author-aware labelling
+    /// of field-note cards.
+    var viewer: String = ""
     var showJobActions: Bool = false
     let openSources: () -> Void
     var onComplete: () -> Void = {}
@@ -295,7 +299,7 @@ private struct MessageRow: View {
                 .frame(maxWidth: 320, alignment: message.isUser ? .trailing : .leading)
 
             if let tip = message.tip {
-                FieldNoteTipCard(tip: tip)
+                FieldNoteTipCard(tip: tip, viewer: viewer)
             }
 
             if !message.isUser && !message.rankedPool.isEmpty {
@@ -346,19 +350,36 @@ private struct MessageRow: View {
 
 private struct FieldNoteTipCard: View {
     let tip: SearchResult
+    /// The tech reading the chat, so the card can distinguish their own
+    /// saved note from knowledge shared by someone else.
+    let viewer: String
+
+    private var isOwn: Bool { tip.fieldNoteAuthor == viewer }
+
+    private var heading: String {
+        isOwn
+            ? "YOUR FIELD NOTE"
+            : "FIELD-NOTE TIP · FROM \(tip.fieldNoteAuthor?.uppercased() ?? "A TECH")"
+    }
+
+    private var footnote: String {
+        isOwn
+            ? "You saved this · synced to the other techs"
+            : "Saved by another tech · not in the manuals"
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
             HStack(spacing: 7) {
                 Image(systemName: "checkmark.circle")
                     .font(.footnote.weight(.semibold))
-                Text("FIELD-NOTE TIP · FROM \(tip.fieldNoteAuthor?.uppercased() ?? "A TECH")")
+                Text(heading)
                     .font(.caption2.weight(.bold))
             }
             .foregroundStyle(.green)
             Text(tip.text)
                 .font(.subheadline)
-            Text("Saved by another tech · not in the manuals")
+            Text(footnote)
                 .font(.caption2)
                 .foregroundStyle(.secondary)
                 .padding(.top, 2)
