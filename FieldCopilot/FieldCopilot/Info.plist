@@ -10,5 +10,13 @@
 	<string>$(SYNC_PASSWORD)</string>
 	<key>SYNC_USERNAME</key>
 	<string>$(SYNC_USERNAME)</string>
+	<key>SYNC_USERNAME_KYLE</key>
+	<string>$(SYNC_USERNAME_KYLE)</string>
+	<key>SYNC_PASSWORD_KYLE</key>
+	<string>$(SYNC_PASSWORD_KYLE)</string>
+	<key>SYNC_USERNAME_BJ</key>
+	<string>$(SYNC_USERNAME_BJ)</string>
+	<key>SYNC_PASSWORD_BJ</key>
+	<string>$(SYNC_PASSWORD_BJ)</string>
 </dict>
 </plist>

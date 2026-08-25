@@ -8,6 +8,8 @@ final class SyncManager: @unchecked Sendable {
     func start(
         database: Database,
         collections: [Collection],
+        username: String,
+        password: String,
         onChange: @escaping @Sendable (String, String, String?) -> Void
     ) throws {
         guard let url = URL(string: SyncConfig.endpointURL) else { return }
@@ -20,9 +22,11 @@ final class SyncManager: @unchecked Sendable {
         config.continuous = true
         config.maxAttempts = 0
 
+        // Authenticate as the technician who is currently signed in, so
+        // App Services grants only that technician's channels.
         config.authenticator = BasicAuthenticator(
-            username: SyncConfig.username,
-            password: SyncConfig.password
+            username: username,
+            password: password
         )
 
         let replicator = Replicator(config: config)

@@ -98,6 +98,11 @@ struct Job: Identifiable, Codable, Sendable {
     var jobParts: [JobPart]
     var clockSeconds: Int
     var routeOrder: Int
+    /// Display name of the technician this work order belongs to ("Kyle" /
+    /// "BJ"). Drives the per-user job list locally, and the per-user channel
+    /// on App Services so a tech can only ever pull their own work orders.
+    /// nil means unassigned - visible to everyone (e.g. dispatcher-created).
+    var assignedTo: String?
     /// Inventory part number this job needs, if any. Drives the chat's
     /// agentic parts-stock check when the tech asks about this job.
     var requiredPart: String?

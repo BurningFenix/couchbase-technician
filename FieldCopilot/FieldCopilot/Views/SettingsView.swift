@@ -20,6 +20,11 @@ struct SettingsView: View {
                         Button {
                             activeUserRaw = user.rawValue
                             chatEngine.activeUser = user
+                            // Re-authenticate to App Services as this tech so
+                            // their channels (and only theirs) apply, and
+                            // refresh the per-tech job list.
+                            dbManager.switchUser()
+                            refreshStats()
                         } label: {
                             HStack(spacing: 13) {
                                 ZStack {
@@ -52,7 +57,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Signed in as")
                 } footer: {
-                    Text("Switch techs to see how a field-note discovery made by one user surfaces for the next.")
+                    Text(userFooter)
                 }
 
                 Section {
@@ -109,7 +114,7 @@ struct SettingsView: View {
                         Text(activityLabel)
                             .font(.headline)
                         Spacer()
-                        Text(SyncConfig.endpointURL)
+                        Text(dbManager.syncingAs.map { "as \($0)" } ?? SyncConfig.endpointURL)
                             .font(.caption)
                             .foregroundStyle(.secondary)
                             .lineLimit(1)
@@ -163,6 +168,13 @@ struct SettingsView: View {
             }
             .onAppear(perform: refreshStats)
         }
+    }
+
+    private var userFooter: String {
+        let base = "Switch techs to see how a field-note discovery made by one user surfaces for the next."
+        return SyncConfig.hasPerUserCredentials
+            ? base + " Each tech signs in to App Services as themselves, so they only sync their own work orders."
+            : base
     }
 
     private var modelFooter: String {

@@ -13,6 +13,7 @@ struct ContentView: View {
     @State private var site = ""
     @State private var reported = ""
     @State private var stepsText = ""
+    @State private var assignedTo = WorkOrder.technicians[0]
     @State private var didInit = false
 
     private var canCreate: Bool {
@@ -61,6 +62,11 @@ struct ContentView: View {
                 field("Priority") {
                     Picker("", selection: $priority) {
                         ForEach(WorkOrder.priorities, id: \.self) { Text($0).tag($0) }
+                    }.labelsHidden().pickerStyle(.segmented)
+                }
+                field("Assign to") {
+                    Picker("", selection: $assignedTo) {
+                        ForEach(WorkOrder.technicians, id: \.self) { Text($0).tag($0) }
                     }.labelsHidden().pickerStyle(.segmented)
                 }
                 field("Asset model") {
@@ -146,6 +152,10 @@ struct ContentView: View {
                         Text(wo.title).font(.body.weight(.semibold))
                         Text("\(wo.assetName) · \(wo.assetTag) · \(wo.assetModel)")
                             .font(.caption).foregroundStyle(.secondary)
+                        Label(wo.assignedTo ?? "Unassigned",
+                              systemImage: wo.assignedTo == nil ? "person.slash" : "person.fill")
+                            .font(.caption2)
+                            .foregroundStyle(wo.assignedTo == nil ? Color.secondary : Color.blue)
                     }
                     .padding(.vertical, 4)
                 }
@@ -225,7 +235,8 @@ struct ContentView: View {
             stepsDone: [],
             jobParts: [],
             clockSeconds: 0,
-            routeOrder: 10 + store.workOrders.count
+            routeOrder: 10 + store.workOrders.count,
+            assignedTo: assignedTo
         )
         store.create(wo)
         // Reset for the next one; bump monotonically so rapid creates during

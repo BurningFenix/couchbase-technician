@@ -22,10 +22,19 @@ struct WorkOrder: Identifiable, Codable, Sendable {
     var jobParts: [JobPart]
     var clockSeconds: Int
     var routeOrder: Int
+    /// Technician this work order is dispatched to ("Kyle" / "BJ"). On the
+    /// phone this drives the per-tech job list, and on App Services it routes
+    /// the document to that technician's private channel — so assigning here
+    /// is what decides whose device the work order reaches.
+    var assignedTo: String?
     // Optional fields the phone also understands; left nil for dispatched WOs.
     var requiredPart: String?
     var demoPrompts: [String]?
 
+    /// Field technicians a work order can be dispatched to. These must match
+    /// the display names the phone uses, since the channel name is derived
+    /// from them ("Kyle" -> tech-kyle).
+    static let technicians = ["Kyle", "BJ"]
     static let priorities = ["Emergency", "High", "Routine", "Low"]
     static let assetModels = ["AeroCool AC-5000", "ThermaFlow RTU-20", "VentMax AHU-8"]
     static let statuses = ["New", "Scheduled", "In Progress"]

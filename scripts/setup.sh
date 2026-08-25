@@ -33,6 +33,10 @@ for line in pathlib.Path(".env").read_text().splitlines():
 url  = env.get("SYNC_ENDPOINT_URL", "")
 user = env.get("SYNC_USERNAME", "")
 pwd  = env.get("SYNC_PASSWORD", "")
+u_kyle = env.get("SYNC_USERNAME_KYLE", "")
+p_kyle = env.get("SYNC_PASSWORD_KYLE", "")
+u_bj   = env.get("SYNC_USERNAME_BJ", "")
+p_bj   = env.get("SYNC_PASSWORD_BJ", "")
 key  = env.get("OPENAI_API_KEY", "")
 
 if not url:
@@ -58,6 +62,13 @@ SYNC_ENDPOINT_URL = {xc_url}
 SYNC_USERNAME = {user}
 SYNC_PASSWORD = {pwd}
 
+// Per-technician App Services accounts. Each demo tech signs in as
+// themselves so App Services grants only that tech's channels.
+SYNC_USERNAME_KYLE = {u_kyle}
+SYNC_PASSWORD_KYLE = {p_kyle}
+SYNC_USERNAME_BJ = {u_bj}
+SYNC_PASSWORD_BJ = {p_bj}
+
 OPENAI_API_KEY = {key}
 """)
 
@@ -71,4 +82,8 @@ print()
 print(f"  endpoint: {url}")
 print(f"  user:     {user}")
 print(f"  openai:   {'configured (cloud comparison enabled)' if key else 'not set (fully on-device)'}")
+if u_kyle and u_bj:
+    print(f"  per-user: {u_kyle} / {u_bj} (each tech syncs only their own work orders)")
+else:
+    print("  per-user: NOT set - both techs share one login, no isolation")
 PY

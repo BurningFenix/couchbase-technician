@@ -61,6 +61,9 @@ files each app actually consumes — re-run it any time you change `.env`:
 
 ### 2. Set up Capella App Services
 
+Per-technician isolation (Kyle and BJ each see only their own work orders):
+**[`capella-per-user-access.md`](capella-per-user-access.md)**.
+
 Full walkthrough: **[`capella-app-services-setup.md`](capella-app-services-setup.md)**
 and **[`FieldDispatcher/README.md`](FieldDispatcher/README.md)**. The short version:
 

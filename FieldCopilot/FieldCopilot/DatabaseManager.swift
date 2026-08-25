@@ -16,6 +16,10 @@ final class DatabaseManager {
     private(set) var syncError: String?
     private(set) var lastSyncDate: Date?
     private(set) var isSyncing = false
+    /// App Services account the replicator is currently authenticated as,
+    /// shown in Settings so it's obvious which technician's channels are in
+    /// play.
+    private(set) var syncingAs: String?
     /// Bumped on every change to the workOrders collection — a local edit OR
     /// a document pulled from Capella — so list views can re-query and mirror
     /// the synced state live.
@@ -143,8 +147,15 @@ final class DatabaseManager {
         let cols = getCollections()
         guard !cols.isEmpty else { return }
         let manager = SyncManager()
+        let user = DemoUser(rawValue: UserDefaults.standard.string(forKey: "activeUser") ?? "kyle") ?? .kyle
+        syncingAs = SyncConfig.username(for: user)
         do {
-            try manager.start(database: db, collections: cols) { [weak self] activity, _, error in
+            try manager.start(
+                database: db,
+                collections: cols,
+                username: SyncConfig.username(for: user),
+                password: SyncConfig.password(for: user)
+            ) { [weak self] activity, _, error in
                 Task { @MainActor in
                     guard let self else { return }
                     self.syncActivity = activity
@@ -170,7 +181,19 @@ final class DatabaseManager {
         syncManager?.stop()
         syncManager = nil
         isSyncing = false
+        syncingAs = nil
         syncActivity = "stopped"
+    }
+
+    /// Called when the technician switches in Settings: tear the replicator
+    /// down and bring it back up as the other App Services user, so the new
+    /// technician's channels take effect immediately. Also refreshes the job
+    /// list, which is filtered per technician.
+    func switchUser() {
+        let wasSyncing = isSyncing
+        stopSync()
+        if wasSyncing || SyncConfig.isConfigured { startSync() }
+        workOrdersRevision &+= 1
     }
 
     private func deleteVectorIndex() throws {
@@ -373,12 +396,34 @@ final class DatabaseManager {
 
     // MARK: - Jobs
 
+    /// The technician currently signed in, read from the same UserDefaults
+    /// key ChatEngine writes.
+    private var activeUserName: String {
+        (UserDefaults.standard.string(forKey: "activeUser") == "bj") ? "BJ" : "Kyle"
+    }
+
+    /// Work orders belonging to the signed-in technician. Unassigned orders
+    /// (e.g. created by the Mac dispatcher) are visible to everyone.
+    ///
+    /// This is the local half of the isolation story - App Services enforces
+    /// the real one by channel, so another tech's orders never reach the
+    /// device. Both matter: the filter keeps the UI honest even when one
+    /// device has synced as both technicians.
     func allJobs() throws -> [Job] {
+        let me = activeUserName
+        return try allCodable(Job.self, in: "workOrders")
+            .filter { $0.assignedTo == nil || $0.assignedTo == me }
+            .sorted { $0.routeOrder < $1.routeOrder }
+    }
+
+    /// Every work order regardless of assignee - used only where the tech
+    /// is opening a specific order by id.
+    func allJobsUnfiltered() throws -> [Job] {
         try allCodable(Job.self, in: "workOrders").sorted { $0.routeOrder < $1.routeOrder }
     }
 
     func job(id: String) throws -> Job? {
-        try allJobs().first { $0.id == id }
+        try allJobsUnfiltered().first { $0.id == id }
     }
 
     func saveJob(_ job: Job) throws {

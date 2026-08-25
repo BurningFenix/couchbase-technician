@@ -2098,7 +2098,8 @@
         }
       ],
       "clockSeconds": 2517,
-      "routeOrder": 2
+      "routeOrder": 2,
+      "assignedTo": "Kyle"
     },
     {
       "id": "job::wo-4822",
@@ -2132,7 +2133,8 @@
       "demoPrompts": [
         "The RTU-20 has no cooling and the condenser fan won't start - where should I begin?",
         "Which run capacitor does the condenser fan use, and do I have one on my van?"
-      ]
+      ],
+      "assignedTo": "Kyle"
     },
     {
       "id": "job::wo-4809",
@@ -2162,7 +2164,8 @@
         }
       ],
       "clockSeconds": 0,
-      "routeOrder": 3
+      "routeOrder": 3,
+      "assignedTo": "Kyle"
     },
     {
       "id": "job::wo-4790",
@@ -2192,7 +2195,8 @@
         }
       ],
       "clockSeconds": 1500,
-      "routeOrder": 0
+      "routeOrder": 0,
+      "assignedTo": "Kyle"
     },
     {
       "id": "job::wo-4830",
@@ -2226,7 +2230,101 @@
       "demoPrompts": [
         "Occupants report a musty, mildew smell from the AHU-8 at startup - what usually causes that and how do I fix it?",
         "I'll swap the final filters while I'm in there - which filter does the AHU-8 take, and do I have them on the van?"
-      ]
+      ],
+      "assignedTo": "Kyle"
+    },
+    {
+      "id": "job::wo-4901",
+      "workOrderNumber": "WO-4901",
+      "priority": "Emergency",
+      "status": "New",
+      "timeLabel": "ASAP",
+      "window": "Respond by 11:00 AM",
+      "title": "A01 supply fan overcurrent",
+      "assetName": "Air Handler",
+      "assetTag": "C-302",
+      "assetModel": "VentMax AHU-8",
+      "site": "Office Wing · Bldg 2, Mech 2B",
+      "reported": "Air handler faulted out on A01 and the east wing has no air. Sounds like the belt is slipping when it tries to start.",
+      "steps": [
+        "Lock out power and inspect the drive belt",
+        "Check for a seized blower bearing",
+        "Confirm dampers are not stuck closed",
+        "Reset the VFD and verify amp draw"
+      ],
+      "stepsDone": [],
+      "jobParts": [
+        {
+          "name": "V-belt, BX-38",
+          "note": "BELT-BX38 · needed"
+        }
+      ],
+      "clockSeconds": 0,
+      "routeOrder": 0,
+      "assignedTo": "BJ",
+      "requiredPart": "BELT-BX38"
+    },
+    {
+      "id": "job::wo-4902",
+      "workOrderNumber": "WO-4902",
+      "priority": "High",
+      "status": "New",
+      "timeLabel": "1:00 PM",
+      "window": "Today, 12:00 - 3:00 PM",
+      "title": "Compressor contactor chattering",
+      "assetName": "Rooftop Chiller",
+      "assetTag": "A-204",
+      "assetModel": "AeroCool AC-5000",
+      "site": "North Plant · Bldg 3, Roof, Zone N",
+      "reported": "Buzzing from the control panel and the compressor keeps trying to start and dropping out. Contacts look pitted.",
+      "steps": [
+        "Check 24VAC control voltage at the coil",
+        "Inspect contacts for pitting",
+        "Replace the contactor",
+        "Verify compressor starts cleanly"
+      ],
+      "stepsDone": [],
+      "jobParts": [
+        {
+          "name": "Contactor, 24VAC 30A",
+          "note": "CONT-24-30 · needed"
+        }
+      ],
+      "clockSeconds": 0,
+      "routeOrder": 1,
+      "assignedTo": "BJ",
+      "requiredPart": "CONT-24-30"
+    },
+    {
+      "id": "job::wo-4903",
+      "workOrderNumber": "WO-4903",
+      "priority": "Routine",
+      "status": "Scheduled",
+      "timeLabel": "3:30 PM",
+      "window": "Today, 3:00 - 5:00 PM",
+      "title": "Quarterly filter service",
+      "assetName": "Rooftop AC Unit",
+      "assetTag": "B-110",
+      "assetModel": "ThermaFlow RTU-20",
+      "site": "Warehouse · Bldg 1, Roof, Bay 4",
+      "reported": "Scheduled quarterly filter change. Check filter condition and log the sizes on the service tag.",
+      "steps": [
+        "Replace return air filters",
+        "Check the economizer damper travel",
+        "Rinse the condenser coil",
+        "Log filter sizes on the service tag"
+      ],
+      "stepsDone": [],
+      "jobParts": [
+        {
+          "name": "Pleated filter, 20x25x2 MERV-8",
+          "note": "FILT-2025-M8 · x4"
+        }
+      ],
+      "clockSeconds": 0,
+      "routeOrder": 2,
+      "assignedTo": "BJ",
+      "requiredPart": "FILT-2025-M8"
     }
   ]
 }
