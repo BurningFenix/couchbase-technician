@@ -215,13 +215,19 @@ Turn on Airplane Mode and repeat steps 1–5. Everything still works.
 
 ## Getting this running with Claude Code
 
-Paste this into Claude Code from the cloned repo root:
+Open Claude Code in the folder where you want the project (no need to clone
+first) and paste this:
 
 ```
 Get this project running on my machine. It's a Couchbase Mobile demo with two
 apps: an iOS app (FieldCopilot/, Xcode project) and a macOS companion
-(FieldDispatcher/, Swift package). Read the README first, then help me through
-setup in this order, checking each step actually worked before moving on:
+(FieldDispatcher/, Swift package). Help me through setup in this order,
+checking each step actually worked before moving on:
+
+0. Clone https://github.com/BurningFenix/couchbase-technician.git into the
+   current folder (if HTTPS fails because the repo is private, use
+   `gh repo clone BurningFenix/couchbase-technician`), cd into it, and read
+   its README.md before doing anything else.
 
 1. Verify prerequisites: Xcode version, that xcode-select points at an Xcode
    with an iOS 27 SDK, and that a physical iPhone is connected
