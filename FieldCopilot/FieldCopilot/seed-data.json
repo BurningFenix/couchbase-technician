@@ -2069,36 +2069,34 @@
       "status": "In Progress",
       "timeLabel": "9:00 AM",
       "window": "9:00-11:00 AM",
-      "title": "E11 high-pressure fault",
+      "title": "E11 low-superheat alarm",
       "assetName": "Rooftop Chiller",
       "assetTag": "A-204",
       "assetModel": "AeroCool AC-5000",
       "site": "North Plant · Bldg 3, Roof",
-      "reported": "Unit repeatedly tripping on high-pressure cutout. E11 latched on the display - no cooling to Zone N since 07:20.",
+      "reported": "Unit keeps latching E11 on the display and dropping cooling to Zone N since 07:20. Suction line is frosted back toward the compressor.",
       "steps": [
-        "Inspect condenser coil for debris & blockage",
-        "Verify condenser fan motor runs",
-        "Measure head pressure at service port",
-        "Clean coil & clear recirculating airflow",
-        "Cycle main power to reset E11",
-        "Confirm pressures stabilize below 380 psi"
+        "Read superheat at the compressor",
+        "Confirm refrigerant charge by subcooling",
+        "Inspect the electronic expansion valve & harness",
+        "Check the suction temperature sensor strap",
+        "Clear E11 and verify superheat 8-12°F"
       ],
-      "stepsDone": [
-        0,
-        1
-      ],
+      "stepsDone": [],
       "jobParts": [
         {
-          "name": "R-410A refrigerant",
-          "note": "2.5 lb · used"
-        },
-        {
-          "name": "High-pressure switch HPS-610",
-          "note": "On truck · not yet installed"
+          "name": "Split loom & rubber grommets",
+          "note": "Van stock · as needed"
         }
       ],
       "clockSeconds": 2517,
       "routeOrder": 2,
+      "demoPrompts": [
+        "The rooftop chiller is latching E11 and the suction line is frosting up near the compressor. What does E11 mean and where do I start?",
+        "Suction is reading 118 psig and the suction line is 43°F six inches off the compressor. What's my superheat?",
+        "Before I touch the valve — head is 365 psig and the liquid line leaving the condenser is 98°F. What's my subcooling, is the charge right?",
+        "Found it — the EEV stepper harness had chafed through where it rubs on the condenser fan bracket, so the valve was stuck wide open. Re-routed it in split loom with a grommet; superheat's back to 10°F and E11 cleared."
+      ],
       "assignedTo": "Kyle"
     },
     {

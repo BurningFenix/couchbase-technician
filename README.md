@@ -151,6 +151,10 @@ swift run
 
 ### 6. Try the demo
 
+> **Presenting?** Use the scripted story in **[`DEMO.md`](DEMO.md)**: WO-4821, an E11
+> call where the agent uses its refrigerant-calculator tool, saves a new fix, and the
+> next tech receives it.
+
 1. **Work** tab → open a work order → **Ask AI about this issue**.
 2. Tap the suggested question. The answer is grounded in that unit's manual,
    and the agent checks whether the required part is on your van.

@@ -1,25 +1,29 @@
 import Foundation
-import HuggingFace
 import MLXHuggingFace
 import MLXLLM
 import MLXLMCommon
 import Tokenizers
 
-/// Qwen3-4B (4-bit) running locally via MLX. NOT bundled: the ~2.2 GB
-/// weights download from the Hugging Face Hub on demand the first time
-/// the user selects this model, then cache. Requires the
-/// increased-memory-limit entitlement.
+/// Qwen3.5-4B (4-bit, text-only) running locally via MLX. NOT bundled: the
+/// ~2.4 GB weights download on demand the first time the user selects this
+/// model (with real byte progress, see `ModelDownloader`), then cache in
+/// Application Support. Requires the increased-memory-limit entitlement.
 ///
-/// Note on model choice: Qwen3.5-4B was tried twice and removed. It is a
-/// vision-language model, so it needs MLX's VLM factory (the text-only
-/// `LLMModelFactory` hangs forever building it). Loaded that way it *does*
-/// run and answer, but it crashed on the second question on-device: its
-/// weights carry a vision tower this app never uses, and the app already
-/// keeps the 1.1 GB Core AI embedding model resident. Not worth the memory.
+/// Note on model choice: the stock Qwen3.5-4B checkpoints are vision-language
+/// models. Earlier attempts loaded them via MLX's VLM factory, which kept the
+/// unused vision tower resident next to the 1.1 GB Core AI embedding model
+/// and crashed on-device. This repo has the vision tower stripped (language
+/// weights bit-identical), so it loads through the text-only
+/// `LLMModelFactory` (`qwen3_5`, supported since mlx-swift-lm 3.31) at
+/// roughly the same footprint as Qwen3-4B. To roll back, set `modelId` to
+/// "mlx-community/Qwen3-4B-4bit" with its own pinned revision.
 actor QwenLLMService {
     static let shared = QwenLLMService()
-    static let modelId = "mlx-community/Qwen3-4B-4bit"
-    static let displayName = "Qwen3 4B"
+    static let modelId = "droyster/Qwen3.5-4B-Text-MLX-4bit"
+    /// Pinned commit: a third-party repo must never change under us.
+    static let modelRevision = "c229db37d5e00db8bbbe9a5a61f95964637fc226"
+    static let displayName = "Qwen3.5 4B"
+    static let downloadSizeLabel = "~2.4 GB"
 
     private var container: ModelContainer?
     private var loadTask: Task<Void, Error>?
@@ -28,11 +32,15 @@ actor QwenLLMService {
 
     var isLoaded: Bool { container != nil }
 
-    /// One progress update from `load`. `fraction` is non-nil only during
-    /// the byte-download phase; it is nil for the "loading weights into
-    /// memory / compiling kernels" phase, which reports no byte progress
-    /// and can take 20-40s — the UI should show an indeterminate spinner
-    /// there so a frozen MB count is never mistaken for a hang.
+    /// True once the weights are fully on disk (only the load remains).
+    static var isDownloaded: Bool {
+        ModelDownloader.isDownloaded(repo: modelId, revision: modelRevision)
+    }
+
+    /// One progress update from `load`. `fraction` is non-nil during the
+    /// byte-download phase; it is nil for the "loading weights into memory /
+    /// compiling kernels" phase, which reports no progress and can take
+    /// 20-40s — the UI shows an indeterminate bar there.
     struct LoadProgress: Sendable {
         let message: String
         let fraction: Double?
@@ -61,55 +69,33 @@ actor QwenLLMService {
     }
 
     private func performLoad(onProgress: (@Sendable (LoadProgress) -> Void)?) async throws {
-        let configuration = ModelConfiguration(id: Self.modelId)
         let name = Self.displayName
-        onProgress?(LoadProgress(message: "Preparing \(name)…", fraction: nil))
-        // The HuggingFace downloader's NSProgress reports 0 bytes until the
-        // large weight file finishes on-device (verified: the callback fires
-        // ~10×/s but completedUnitCount stays 0 the whole download), so a
-        // determinate bar would just sit at 0%. Instead we show a moving
-        // elapsed-time indicator — honest and clearly alive — and only fall
-        // back to a real % bar if the platform ever does report bytes.
-        let downloadStart = Date()
-        // Heartbeat: every progress callback stamps this; the watchdog below
-        // fails the load if it goes quiet for too long.
-        let heartbeat = Heartbeat()
+        onProgress?(LoadProgress(message: "Preparing \(name)…", fraction: Self.isDownloaded ? nil : 0))
 
+        let directory = try await ModelDownloader.ensureDownloaded(
+            repo: Self.modelId, revision: Self.modelRevision
+        ) { p in
+            let mb = { (b: Int64) in b / 1_048_576 }
+            onProgress?(LoadProgress(
+                message: "Downloading \(name) — \(Int(p.fraction * 100))% (\(mb(p.completedBytes)) of \(mb(p.totalBytes)) MB)",
+                fraction: p.fraction))
+        }
+
+        onProgress?(LoadProgress(message: "Loading \(name) into memory… (20-40s)", fraction: nil))
         container = try await withThrowingTaskGroup(of: ModelContainer?.self) { group in
             group.addTask {
                 try await LLMModelFactory.shared.loadContainer(
-                    from: #hubDownloader(),
-                    using: #huggingFaceTokenizerLoader(),
-                    configuration: configuration
-                ) { progress in
-                    Task { await heartbeat.beat() }
-                    let done = progress.completedUnitCount
-                    let total = progress.totalUnitCount
-                    let fraction = progress.fractionCompleted
-                    if progress.isFinished || fraction >= 0.999 {
-                        onProgress?(LoadProgress(message: "Loading \(name) into memory… (20-40s)", fraction: nil))
-                    } else if done > 5_000_000, total > 10_000_000, fraction > 0.01 {
-                        // Real byte progress is available → determinate bar.
-                        onProgress?(LoadProgress(
-                            message: "Downloading \(name) — \(Int(fraction * 100))% (\(done / 1_048_576) of \(total / 1_048_576) MB)",
-                            fraction: fraction))
-                    } else {
-                        let secs = Int(Date().timeIntervalSince(downloadStart))
-                        onProgress?(LoadProgress(message: "Downloading \(name)… \(secs)s elapsed (~2.2 GB)", fraction: nil))
-                    }
-                }
+                    from: directory,
+                    using: #huggingFaceTokenizerLoader()
+                )
             }
             group.addTask {
-                while true {
-                    try await Task.sleep(for: .seconds(5))
-                    if await heartbeat.silence > Self.stallTimeout {
-                        throw QwenError.loadStalled(name)
-                    }
-                }
+                try await Task.sleep(for: .seconds(Self.stallTimeout))
+                throw QwenError.loadStalled(name)
             }
             defer { group.cancelAll() }
             // The loader finishes first on success; the watchdog only wins if
-            // the load goes quiet past the timeout.
+            // building the model hangs past the timeout.
             while let result = try await group.next() {
                 if let container = result { return container }
             }
@@ -118,7 +104,12 @@ actor QwenLLMService {
         print("[QwenLLMService] Model loaded")
     }
 
+    /// `tools` are OpenAI-style function schemas; when the model emits a tool
+    /// call, `toolDispatch(name, arguments)` runs it and ChatSession feeds the
+    /// result back before generation continues.
     func generate(instructions: String, prompt: String, maxTokens: Int = 700,
+                  tools: [ToolSpec]? = nil,
+                  toolDispatch: (@Sendable (String, [String: Any]) -> String)? = nil,
                   onStatus: (@Sendable (String) -> Void)? = nil,
                   onPartial: (@Sendable (String) -> Void)? = nil) async throws -> String {
         try await load { onStatus?($0.message) }
@@ -126,12 +117,29 @@ actor QwenLLMService {
 
         var parameters = GenerateParameters()
         parameters.maxTokens = maxTokens
-        parameters.temperature = 0.0
+        // Qwen's recommended non-thinking sampling. Pure greedy (temp 0) is
+        // explicitly discouraged for Qwen3.5: it degrades quality and can
+        // loop on repeated phrases.
+        parameters.temperature = 0.7
+        parameters.topP = 0.8
+        parameters.topK = 20
+        parameters.presencePenalty = 1.5
         parameters.kvBits = 4
 
         let start = Date()
-        let session = ChatSession(container, instructions: instructions, generateParameters: parameters)
-        let fullPrompt = prompt + " /no_think"  // template honors this on Qwen3
+        // Qwen3.5 dropped the "/no_think" soft switch; thinking is turned off
+        // through the chat template instead (it then emits an empty
+        // <think></think>, which stripThinking removes).
+        let session = ChatSession(
+            container, instructions: instructions, generateParameters: parameters,
+            additionalContext: ["enable_thinking": false],
+            tools: tools,
+            toolDispatch: toolDispatch.map { dispatch in
+                { @Sendable call in
+                    dispatch(call.function.name, call.function.arguments.mapValues(\.anyValue))
+                }
+            })
+        let fullPrompt = prompt
 
         // Without a partial-callback, one-shot; otherwise stream the chunks
         // and emit the running text (with the <think> block stripped) for a
@@ -170,17 +178,10 @@ actor QwenLLMService {
         case loadStalled(String)
         var errorDescription: String? {
             switch self {
-            case .notLoaded: "Qwen3 4B is not loaded."
+            case .notLoaded: "\(QwenLLMService.displayName) is not loaded."
             case .loadStalled(let name):
                 "\(name) stopped responding while loading. Try again, or switch to the Foundation model."
             }
         }
     }
-}
-
-/// Tracks how long it's been since the last progress callback.
-private actor Heartbeat {
-    private var last = Date()
-    func beat() { last = Date() }
-    var silence: TimeInterval { Date().timeIntervalSince(last) }
 }

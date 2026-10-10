@@ -16,7 +16,7 @@ struct ChatAskView: View {
         _ = modelBackendRaw
         switch AIService.ModelBackend.preferred {
         case .onDevice: return "Foundation model"
-        case .qwen: return "Qwen3 4B"
+        case .qwen: return QwenLLMService.displayName
         case .openAI: return "OpenAI"
         }
     }
@@ -51,6 +51,20 @@ struct ChatAskView: View {
                     .foregroundStyle(.secondary)
                     .contentTransition(.numericText())
                     .animation(.default, value: engine.qwenStatus)
+            }
+            // First-run model download/load: a slim bar under the status line.
+            if engine.qwenStatus != nil {
+                Group {
+                    if let fraction = engine.qwenProgress {
+                        ProgressView(value: fraction)
+                            .progressViewStyle(.linear)
+                            .tint(.blue)
+                    } else {
+                        IndeterminateBar()
+                    }
+                }
+                .frame(maxWidth: 220)
+                .padding(.top, 2)
             }
         }
         .frame(maxWidth: .infinity)
@@ -89,6 +103,7 @@ struct ChatAskView: View {
 
                     if engine.isTyping {
                         VStack(alignment: .leading, spacing: 6) {
+                            ForEach(engine.liveToolCalls) { ToolCallCard(activity: $0) }
                             TypingIndicator()
                             if let status = engine.statusText {
                                 Text(status)
@@ -282,6 +297,8 @@ private struct MessageRow: View {
 
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: 7) {
+            ForEach(message.toolCalls) { ToolCallCard(activity: $0) }
+
             Text(message.text)
                 .font(.subheadline)
                 .padding(.horizontal, 15)
@@ -441,7 +458,7 @@ struct SourcesSheet: View {
     private var modelShort: String {
         switch AIService.ModelBackend.preferred {
         case .onDevice: "local LLM"
-        case .qwen: "Qwen3 4B"
+        case .qwen: QwenLLMService.displayName
         case .openAI: "OpenAI"
         }
     }
@@ -522,5 +539,44 @@ struct SourcesSheet: View {
         .padding(5)
         .background(.regularMaterial, in: Capsule())
         .padding(.top, 8)
+    }
+}
+
+/// "The agent ran a tool" card: shows the deterministic computation the
+/// model delegated, so the audience sees the number didn't come from the LLM.
+struct ToolCallCard: View {
+    let activity: ToolActivity
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: "function")
+                .font(.footnote.weight(.bold))
+                .foregroundStyle(.white)
+                .frame(width: 28, height: 28)
+                .background(.indigo, in: RoundedRectangle(cornerRadius: 8))
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 5) {
+                    Text("TOOL CALL")
+                        .font(.caption2.weight(.bold))
+                        .foregroundStyle(.indigo)
+                    Text("· \(activity.title)")
+                        .font(.caption2.weight(.semibold))
+                        .foregroundStyle(.secondary)
+                }
+                Text(activity.result)
+                    .font(.subheadline.weight(.semibold))
+                    .monospacedDigit()
+                Text(activity.inputs)
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+                    .monospacedDigit()
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 9)
+        .frame(maxWidth: 320, alignment: .leading)
+        .background(.indigo.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
+        .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.indigo.opacity(0.3), lineWidth: 0.5))
+        .transition(.scale(scale: 0.95).combined(with: .opacity))
     }
 }

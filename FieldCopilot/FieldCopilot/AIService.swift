@@ -13,7 +13,7 @@ enum AIService {
         var displayName: String {
             switch self {
             case .onDevice: "On-Device Model"
-            case .qwen: "Qwen3 4B (on-device)"
+            case .qwen: "\(QwenLLMService.displayName) (on-device)"
             case .openAI: "OpenAI \(AIService.openAIModel)"
             }
         }
@@ -38,6 +38,8 @@ enum AIService {
         /// Non-nil when the technician's message reported a fix the
         /// sources don't cover: a note worth saving for other techs.
         var novelFixNote: String?
+        /// Tools the agent called while producing this answer.
+        var toolCalls: [ToolActivity] = []
     }
 
     struct ConversationTurn: Sendable {
@@ -224,12 +226,26 @@ enum AIService {
         preferredBackend: ModelBackend = .onDevice,
         detectFixes: Bool = true,
         onStatus: (@Sendable (String) -> Void)? = nil,
-        onPartial: (@Sendable (String) -> Void)? = nil
+        onPartial: (@Sendable (String) -> Void)? = nil,
+        onToolCall: (@Sendable (ToolActivity) -> Void)? = nil
     ) async throws -> Answer {
         let sources = Array(context.prefix(5))
+        // Every backend gets the same tools and reports calls into this log,
+        // so the chat can show what the agent ran, whichever model answered.
+        let toolLog = ToolCallLog { activity in
+            onStatus?("\(activity.title): \(activity.result) — writing answer…")
+            onToolCall?(activity)
+        }
         var contextBlock = ""
         for (i, chunk) in sources.enumerated() {
-            if chunk.isFieldNote {
+            if chunk.page == 0 && !chunk.isFieldNote {
+                // The job briefing (reported issue + history), not a manual.
+                contextBlock += """
+                --- SOURCE \(i + 1) (\(chunk.manualTitle.uppercased()) - the job you are on, not a manual) ---
+                Content: \(chunk.text)
+
+                """
+            } else if chunk.isFieldNote {
                 contextBlock += """
                 --- SOURCE \(i + 1) (SHARED FIELD NOTE from technician \(chunk.fieldNoteAuthor ?? "unknown"), not from a manual) ---
                 Content: \(chunk.text)
@@ -264,7 +280,14 @@ enum AIService {
         Only say the information is not available when no source is plausibly related. \
         Cite the manual name, section, and page number; cite shared field notes as field notes. Be concise and practical. \
         Report which numbered sources you based the answer on. \
-        If the technician reports a fix they discovered that no source covers, acknowledge it.
+        If the technician reports a fix they discovered that no source covers, acknowledge it. \
+        You have a refrigerantCalculator tool. Whenever the technician gives a pressure reading and asks about \
+        superheat, subcooling, saturation temperature, or whether the charge or readings are OK, call the tool \
+        first and use its numbers - never work out saturation temperatures yourself. When the technician gives a \
+        pressure AND a line temperature, always pass both: suction pressure + suction line temperature is superheat, \
+        head pressure + liquid line temperature is subcooling (which is how charge is verified). Use the unit's refrigerant \
+        from the work order (R-410A if not stated). Then compare the result to the target range in the sources \
+        and say plainly what it means and what to do next.
         """
         // The cloud model handles the combined 4-field schema in one call.
         let instructions = baseInstructions
@@ -287,6 +310,8 @@ enum AIService {
                 // reliable at that structured task.
                 let text = try await QwenLLMService.shared.generate(
                     instructions: baseInstructions, prompt: prompt,
+                    tools: [AgentTools.calculatorSchema],
+                    toolDispatch: { name, args in AgentTools.dispatch(name: name, arguments: args, log: toolLog) },
                     onStatus: onStatus, onPartial: onPartial)
                 let answerText = text.trimmingCharacters(in: .whitespacesAndNewlines)
                 guard !answerText.isEmpty else { throw AIError.generationTimedOut }
@@ -295,7 +320,8 @@ enum AIService {
                     onStatus?("Checking for new field knowledge…")
                     novelFix = await detectNovelFix(latestMessage: question, assistantAnswer: answerText, sources: sources)
                 }
-                return Answer(text: answerText, sourcesUsed: [], backend: .qwen, novelFixNote: novelFix)
+                return Answer(text: answerText, sourcesUsed: [], backend: .qwen, novelFixNote: novelFix,
+                              toolCalls: toolLog.all)
             } catch {
                 // Local-first resilience: Qwen model trouble (still loading,
                 // memory pressure, or a stalled load) falls back to the
@@ -307,7 +333,7 @@ enum AIService {
 
         if preferredBackend == .openAI {
             do {
-                return try await askOpenAI(instructions: instructions, prompt: prompt, sourceCount: sources.count)
+                return try await askOpenAI(instructions: instructions, prompt: prompt, sourceCount: sources.count, toolLog: toolLog)
             } catch {
                 // Offline-first: any cloud failure falls back to on-device.
                 print("[AIService] OpenAI failed (\(error)), falling back to on-device")
@@ -321,7 +347,9 @@ enum AIService {
         print("[AIService] Sending prompt via on-device model with \(sources.count) sources (~\(prompt.count) chars)")
         let start = Date()
         do {
-            let raw = try await respondWithRetry(instructions: baseInstructions, prompt: prompt, onStatus: onStatus, onPartial: onPartial)
+            let raw = try await respondWithRetry(instructions: baseInstructions, prompt: prompt, toolLog: toolLog,
+                                                 offerTools: AgentTools.hasPressureReading(question),
+                                                 onStatus: onStatus, onPartial: onPartial)
             let valid = raw.sourcesUsed.filter { (1...sources.count).contains($0) }
             print("[AIService] Generated in \(String(format: "%.1f", Date().timeIntervalSince(start)))s")
             print("[AIService] Response: \(raw.answer)")
@@ -331,14 +359,15 @@ enum AIService {
                 novelFix = await detectNovelFix(latestMessage: question, assistantAnswer: raw.answer, sources: sources)
             }
             print("[AIService] Sources used: \(valid), novelFix: \(novelFix != nil)")
-            return Answer(text: raw.answer, sourcesUsed: valid, backend: .onDevice, novelFixNote: novelFix)
+            return Answer(text: raw.answer, sourcesUsed: valid, backend: .onDevice, novelFixNote: novelFix,
+                          toolCalls: toolLog.all)
         } catch {
             // Last resort: if the on-device model is stuck or broken and
             // a cloud key exists, rescue the answer via OpenAI.
             if !(error is CancellationError), AIConfig.hasOpenAIKey {
                 print("[AIService] On-device generation failed (\(error)) — attempting OpenAI rescue")
                 onStatus?("On-device model stuck — trying cloud…")
-                if let rescued = try? await askOpenAI(instructions: instructions, prompt: prompt, sourceCount: sources.count) {
+                if let rescued = try? await askOpenAI(instructions: instructions, prompt: prompt, sourceCount: sources.count, toolLog: toolLog) {
                     return rescued
                 }
             }
@@ -358,11 +387,17 @@ enum AIService {
         instructions: String,
         prompt: String,
         timeout: Double,
+        toolLog: ToolCallLog,
+        offerTools: Bool,
         onPartial: (@Sendable (String) -> Void)? = nil
     ) async throws -> RawAnswer {
         try await withThrowingTaskGroup(of: RawAnswer.self) { group in
             group.addTask {
-                let session = LanguageModelSession(instructions: instructions)
+                // The framework runs any tool calls the model makes before
+                // the guided answer starts streaming.
+                let session = LanguageModelSession(
+                    tools: offerTools ? [AgentTools.RefrigerantCalculatorTool(log: toolLog)] : [],
+                    instructions: instructions)
                 // Stream the guided generation: the `answer` field fills in
                 // token by token (sourcesUsed lands at the end), so we emit
                 // the growing answer for a live typewriter effect.
@@ -461,6 +496,8 @@ enum AIService {
     private static func respondWithRetry(
         instructions: String,
         prompt: String,
+        toolLog: ToolCallLog,
+        offerTools: Bool,
         maxRetries: Int = 3,
         onStatus: (@Sendable (String) -> Void)? = nil,
         onPartial: (@Sendable (String) -> Void)? = nil
@@ -469,7 +506,8 @@ enum AIService {
         var timeoutRetries = 0
         while true {
             do {
-                return try await respondOnce(instructions: instructions, prompt: prompt, timeout: 60, onPartial: onPartial)
+                return try await respondOnce(instructions: instructions, prompt: prompt, timeout: 60,
+                                             toolLog: toolLog, offerTools: offerTools, onPartial: onPartial)
             } catch {
                 if error is CancellationError { throw error }
 
@@ -520,16 +558,11 @@ enum AIService {
         let choices: [Choice]
     }
 
-    private static func askOpenAI(instructions: String, prompt: String, sourceCount: Int) async throws -> Answer {
+    private static func askOpenAI(instructions: String, prompt: String, sourceCount: Int,
+                                  toolLog: ToolCallLog) async throws -> Answer {
         guard let apiKey = AIConfig.openAIKey else {
             throw AIError.openAIKeyMissing
         }
-
-        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
-        request.httpMethod = "POST"
-        request.timeoutInterval = 30
-        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
 
         let schema: [String: Any] = [
             "type": "object",
@@ -555,28 +588,42 @@ enum AIService {
             "required": ["answer", "sourcesUsed", "reportsNovelFix", "novelFixNote"],
             "additionalProperties": false
         ]
-        let body: [String: Any] = [
-            "model": openAIModel,
-            "messages": [
-                ["role": "system", "content": instructions],
-                ["role": "user", "content": prompt]
-            ],
-            "response_format": [
-                "type": "json_schema",
-                "json_schema": ["name": "cited_answer", "strict": true, "schema": schema]
-            ]
+        var messages: [[String: Any]] = [
+            ["role": "system", "content": instructions],
+            ["role": "user", "content": prompt]
         ]
-        request.httpBody = try JSONSerialization.data(withJSONObject: body)
 
-        print("[AIService] Sending prompt via OpenAI (\(openAIModel))")
-        let (data, response) = try await URLSession.shared.data(for: request)
-        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
-            let detail = String(data: data, encoding: .utf8) ?? "no body"
-            throw AIError.openAIRequestFailed(detail)
+        // Function-calling loop: the model may call the calculator before
+        // producing the final structured answer. Capped so a confused model
+        // can't loop forever.
+        var content: String?
+        for round in 0..<4 {
+            let body: [String: Any] = [
+                "model": openAIModel,
+                "messages": messages,
+                "tools": [AgentTools.calculatorSchema],
+                "response_format": [
+                    "type": "json_schema",
+                    "json_schema": ["name": "cited_answer", "strict": true, "schema": schema]
+                ]
+            ]
+            print("[AIService] Sending prompt via OpenAI (\(openAIModel)), round \(round + 1)")
+            let message = try await openAIChatMessage(apiKey: apiKey, body: body)
+            guard let toolCalls = message["tool_calls"] as? [[String: Any]], !toolCalls.isEmpty else {
+                content = message["content"] as? String
+                break
+            }
+            messages.append(message)
+            for call in toolCalls {
+                let function = call["function"] as? [String: Any] ?? [:]
+                let argsJSON = (function["arguments"] as? String ?? "{}").data(using: .utf8) ?? Data()
+                let args = (try? JSONSerialization.jsonObject(with: argsJSON)) as? [String: Any] ?? [:]
+                let output = AgentTools.dispatch(name: function["name"] as? String ?? "", arguments: args, log: toolLog)
+                messages.append(["role": "tool", "tool_call_id": call["id"] as? String ?? "", "content": output])
+            }
         }
 
-        let decoded = try JSONDecoder().decode(OpenAIChatResponse.self, from: data)
-        guard let content = decoded.choices.first?.message.content,
+        guard let content,
               let contentData = content.data(using: .utf8),
               let parsed = try JSONSerialization.jsonObject(with: contentData) as? [String: Any],
               let answerText = parsed["answer"] as? String else {
@@ -589,7 +636,29 @@ enum AIService {
             : nil
         print("[AIService] OpenAI response: \(answerText)")
         print("[AIService] Sources used: \(used), novelFix: \(novelFix != nil)")
-        return Answer(text: answerText, sourcesUsed: used, backend: .openAI, novelFixNote: novelFix)
+        return Answer(text: answerText, sourcesUsed: used, backend: .openAI, novelFixNote: novelFix,
+                      toolCalls: toolLog.all)
+    }
+
+    /// One chat-completions round trip, returning the raw assistant message
+    /// (kept as a dictionary so tool_calls can be echoed back verbatim).
+    private static func openAIChatMessage(apiKey: String, body: [String: Any]) async throws -> [String: Any] {
+        var request = URLRequest(url: URL(string: "https://api.openai.com/v1/chat/completions")!)
+        request.httpMethod = "POST"
+        request.timeoutInterval = 30
+        request.setValue("Bearer \(apiKey)", forHTTPHeaderField: "Authorization")
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.httpBody = try JSONSerialization.data(withJSONObject: body)
+        let (data, response) = try await URLSession.shared.data(for: request)
+        guard let http = response as? HTTPURLResponse, http.statusCode == 200 else {
+            throw AIError.openAIRequestFailed(String(data: data, encoding: .utf8) ?? "no body")
+        }
+        guard let json = try JSONSerialization.jsonObject(with: data) as? [String: Any],
+              let choices = json["choices"] as? [[String: Any]],
+              let message = choices.first?["message"] as? [String: Any] else {
+            throw AIError.openAIRequestFailed("unexpected response shape")
+        }
+        return message
     }
 
     enum AIError: LocalizedError {

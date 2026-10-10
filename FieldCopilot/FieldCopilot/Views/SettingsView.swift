@@ -63,7 +63,7 @@ struct SettingsView: View {
                 Section {
                     Picker("AI Model", selection: $modelBackendRaw) {
                         Text("Foundation").tag(AIService.ModelBackend.onDevice.rawValue)
-                        Text("Qwen3 4B").tag(AIService.ModelBackend.qwen.rawValue)
+                        Text(QwenLLMService.displayName).tag(AIService.ModelBackend.qwen.rawValue)
                         Text("OpenAI").tag(AIService.ModelBackend.openAI.rawValue)
                     }
                     .pickerStyle(.segmented)
@@ -78,10 +78,9 @@ struct SettingsView: View {
                                 .foregroundStyle(.secondary)
                                 .contentTransition(.numericText())
                                 .animation(.default, value: status)
-                            // Real fraction → determinate bar; otherwise an
-                            // indeterminate animated bar (the downloader gives
-                            // no byte progress, and the load phase has none),
-                            // so there is always a moving bar, never a hang.
+                            // Download phase → determinate byte-progress bar;
+                            // load-into-memory phase (no measurable progress)
+                            // → indeterminate animated bar, never a frozen one.
                             if let fraction = chatEngine.qwenProgress {
                                 ProgressView(value: fraction)
                                     .tint(.blue)
@@ -96,7 +95,7 @@ struct SettingsView: View {
                             .foregroundStyle(.orange)
                     } else if modelBackendRaw == AIService.ModelBackend.qwen.rawValue
                                 && chatEngine.qwenReady {
-                        Label("Qwen3 4B ready", systemImage: "checkmark.circle.fill")
+                        Label("\(QwenLLMService.displayName) ready", systemImage: "checkmark.circle.fill")
                             .font(.subheadline)
                             .foregroundStyle(.green)
                     }
@@ -182,11 +181,11 @@ struct SettingsView: View {
         case .onDevice:
             "Apple's on-device foundation model. Fastest replies, fully offline - no data leaves the device."
         case .qwen:
-            "Qwen3 4B running locally via MLX. Larger, more capable on-device answers; fully offline. Downloads ~2.2 GB on demand the first time you select it."
+            "\(QwenLLMService.displayName) running locally via MLX. Larger, more capable on-device answers; fully offline. Downloads \(QwenLLMService.downloadSizeLabel) on demand the first time you select it."
         case .openAI:
             AIConfig.hasOpenAIKey
                 ? "OpenAI \(AIService.openAIModel) in the cloud. Highest quality; requires a connection and sends prompts off-device."
-                : "OpenAI requires an API key in Secrets.xcconfig - without one the app uses Qwen 4B."
+                : "OpenAI requires an API key in Secrets.xcconfig - without one the app uses the Foundation model."
         }
     }
 
@@ -237,9 +236,9 @@ struct SettingsView: View {
 
 /// An indeterminate linear progress bar: a highlight segment sweeps across a
 /// track on a loop. Used when there's activity but no measurable fraction
-/// (Qwen download reports no byte progress; the load phase has none), so the
+/// (the Qwen load-into-memory phase reports no progress), so the
 /// bar always moves instead of sitting frozen at 0%.
-private struct IndeterminateBar: View {
+struct IndeterminateBar: View {
     @State private var animating = false
 
     var body: some View {

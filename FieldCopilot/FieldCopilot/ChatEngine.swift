@@ -31,6 +31,8 @@ struct ChatMessage: Identifiable {
     /// True when this exchange stored a new field note.
     var savedNote: Bool = false
     var backend: AIService.ModelBackend = .onDevice
+    /// Tools the agent ran for this answer (shown as cards above it).
+    var toolCalls: [ToolActivity] = []
 
     var isUser: Bool { role == .user }
 }
@@ -45,6 +47,9 @@ final class ChatEngine {
     private(set) var isRerunning = false
     /// Live progress line under the typing indicator (model download etc).
     private(set) var statusText: String?
+    /// Tool calls made so far for the in-flight answer, shown under the
+    /// typing indicator until the answer bubble takes them over.
+    private(set) var liveToolCalls: [ToolActivity] = []
     /// Qwen prewarm progress shown in the chat header (nil when idle).
     private(set) var qwenStatus: String?
     /// Determinate download fraction (0...1) while Qwen weights download;
@@ -104,14 +109,16 @@ final class ChatEngine {
         }
         if messages.isEmpty {
             return [
-                "The AC-5000 is showing fault code E11 — what does that mean?",
+                // Demo beat: asked as the OTHER tech, this surfaces the field
+                // note saved during the WO-4821 story.
+                "The AC-5000 is latching E11 again — anything I should know?",
+                "R-410A unit: suction is 118 psig and the suction line is 43°F. What's my superheat?",
                 "There's a damp, musty smell when the AC first starts cooling. Any idea why?",
-                "What should I keep an eye on around 380 psig?",
             ]
         }
         return [
-            "Found the culprit — the liquid line was kinked where it runs behind the condenser mounting bracket. I straightened it out and the E11 cleared right up.",
-            "And what about fault code F04?",
+            "Head pressure is 365 psig and the liquid line is 98°F — what's my subcooling?",
+            "What should I keep an eye on around 380 psig?",
             "Which unit takes 24x24x2 filters?",
         ]
     }
@@ -181,7 +188,11 @@ final class ChatEngine {
             history = " Recent service on this unit: " + recs.prefix(2)
                 .map { "\($0.date), \($0.summary)" }.joined(separator: "; ") + "."
         }
-        let text = "\(job.workOrderNumber) (\(job.priority) priority). Asset: \(job.assetName) \(job.assetTag), a \(job.assetModel). Reported problem: \(job.reported)\(history)"
+        // The refrigerant lets the calculator tool pick the right PT data
+        // without the tech having to say it.
+        let asset = (try? dbManager?.allAssets())?.first { $0.assetTag == job.assetTag }
+        let refrigerant = asset?.specs.refrigerant.map { ", charged with \($0)" } ?? ""
+        let text = "\(job.workOrderNumber) (\(job.priority) priority). Asset: \(job.assetName) \(job.assetTag), a \(job.assetModel)\(refrigerant). Reported problem: \(job.reported)\(history)"
         return SearchResult(
             chunkId: "wo::\(job.id)",
             manualTitle: "Work order \(job.workOrderNumber)",
@@ -261,6 +272,7 @@ final class ChatEngine {
 
                 statusText = "Reading sources & writing your answer…"
                 streamingBotId = nil
+                liveToolCalls = []
                 // In a job chat, lead the context with the work-order briefing
                 // (reported issue + recent service) so the answer is grounded
                 // in this specific job, not just the manuals.
@@ -284,6 +296,9 @@ final class ChatEngine {
                     },
                     onPartial: { [weak self] partial in
                         Task { @MainActor in self?.streamPartial(partial, user: user, question: trimmed) }
+                    },
+                    onToolCall: { [weak self] activity in
+                        Task { @MainActor in self?.liveToolCalls.append(activity) }
                     }
                 )
 
@@ -320,6 +335,7 @@ final class ChatEngine {
                     conversations[user]?[idx].answers[mode] = answer
                     conversations[user]?[idx].tip = tip
                     conversations[user]?[idx].backend = answer.backend
+                    conversations[user]?[idx].toolCalls = answer.toolCalls
                     botId = id
                 } else {
                     var bot = ChatMessage(role: .bot, text: finalText)
@@ -329,10 +345,12 @@ final class ChatEngine {
                     bot.answers[mode] = answer
                     bot.tip = tip
                     bot.backend = answer.backend
+                    bot.toolCalls = answer.toolCalls
                     botId = bot.id
                     conversations[user, default: []].append(bot)
                 }
                 streamingBotId = nil
+                liveToolCalls = []
                 isTyping = false
                 statusText = nil
                 if offerCompletion { pendingJobCompletionMessageId = botId }
@@ -349,6 +367,7 @@ final class ChatEngine {
             }
             isTyping = false
             statusText = nil
+            liveToolCalls = []
         }
     }
 
@@ -366,6 +385,9 @@ final class ChatEngine {
         } else {
             var bot = ChatMessage(role: .bot, text: text)
             bot.question = question
+            // Tools run before the first token, so the bubble inherits them.
+            bot.toolCalls = liveToolCalls
+            liveToolCalls = []
             streamingBotId = bot.id
             conversations[user, default: []].append(bot)
             isTyping = false
@@ -414,6 +436,7 @@ final class ChatEngine {
         if let cached = msg.answers[newMode] {
             conversations[user]?[idx].text = cached.text + suffix
             conversations[user]?[idx].backend = cached.backend
+            conversations[user]?[idx].toolCalls = cached.toolCalls
             return
         }
 
@@ -437,6 +460,7 @@ final class ChatEngine {
                 conversations[user]?[idx].answers[newMode] = answer
                 conversations[user]?[idx].text = answer.text + suffix
                 conversations[user]?[idx].backend = answer.backend
+                conversations[user]?[idx].toolCalls = answer.toolCalls
             } catch {
                 print("[ChatEngine] Mode re-run error: \(error)")
             }
@@ -444,7 +468,7 @@ final class ChatEngine {
         }
     }
 
-    /// Warms the Qwen CoreAI model at launch (and on switching to it in Settings) so
+    /// Warms the Qwen MLX model at launch (and on switching to it in Settings) so
     /// the first question pays no download/load cost.
     func prewarmQwenIfNeeded() {
         guard AIService.ModelBackend.preferred == .qwen, !qwenReady else { return }
@@ -464,7 +488,7 @@ final class ChatEngine {
                 // Leave qwenReady false so a retry re-attempts the load;
                 // answers meanwhile fall back to the Foundation model.
                 print("[ChatEngine] Qwen prewarm failed: \(error)")
-                qwenLoadError = "Qwen3 4B couldn't load — answers will use the Foundation model."
+                qwenLoadError = "\(QwenLLMService.displayName) couldn't load — answers will use the Foundation model."
             }
             qwenStatus = nil
             qwenProgress = nil
