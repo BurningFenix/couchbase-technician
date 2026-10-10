@@ -45,6 +45,8 @@ enum AIService {
     struct ConversationTurn: Sendable {
         var isUser: Bool
         var text: String
+        /// A compaction summary standing in for older turns.
+        var isSummary = false
     }
 
     // On-device schemas stay SMALL: the beta guided-generation daemon is
@@ -98,7 +100,8 @@ enum AIService {
         if !conversation.isEmpty {
             historyBlock = "Recent conversation:\n"
             for turn in conversation.suffix(4) {
-                historyBlock += "\(turn.isUser ? "Technician" : "Assistant"): \(turn.text.prefix(200))\n"
+                let speaker = turn.isSummary ? "Summary" : (turn.isUser ? "Technician" : "Assistant")
+                historyBlock += "\(speaker): \(turn.text.prefix(200))\n"
             }
             historyBlock += "\n"
         }
@@ -144,14 +147,7 @@ enum AIService {
         conversation: [ConversationTurn],
         preferredBackend: ModelBackend = .onDevice
     ) async throws -> Answer {
-        var historyBlock = ""
-        if !conversation.isEmpty {
-            historyBlock = "Conversation so far:\n"
-            for turn in conversation.suffix(8) {
-                historyBlock += "\(turn.isUser ? "Technician" : "Assistant"): \(turn.text)\n"
-            }
-            historyBlock += "\n"
-        }
+        let historyBlock = historyBlock(for: conversation)
 
         let instructions = """
         You are Field Assist, a friendly assistant built into the FieldCopilot app for HVAC field technicians. \
@@ -219,6 +215,144 @@ enum AIService {
         return Answer(text: content, sourcesUsed: [], backend: .openAI, novelFixNote: nil)
     }
 
+    // MARK: - Prompt building (shared with the context meter)
+
+    /// System instructions for a grounded answer. The context meter counts
+    /// these exact strings, so keep every prompt piece built here.
+    static let answerInstructions = """
+    You are a helpful field technician assistant. Answer the technician's latest message based on the provided source material and the conversation. \
+    Read every source carefully before answering - the most relevant source may appear at any position in the list. \
+    Technicians describe symptoms in everyday words; if a source describes a likely cause or fix for the symptom, \
+    explain it even when the source uses different wording than the question. \
+    Only say the information is not available when no source is plausibly related. \
+    Cite the manual name, section, and page number; cite shared field notes as field notes. Be concise and practical. \
+    Report which numbered sources you based the answer on. \
+    If the technician reports a fix they discovered that no source covers, acknowledge it. \
+    You have a refrigerantCalculator tool. Whenever the technician gives a pressure reading and asks about \
+    superheat, subcooling, saturation temperature, or whether the charge or readings are OK, call the tool \
+    first and use its numbers - never work out saturation temperatures yourself. When the technician gives a \
+    pressure AND a line temperature, always pass both: suction pressure + suction line temperature is superheat, \
+    head pressure + liquid line temperature is subcooling (which is how charge is verified). Use the unit's refrigerant \
+    from the work order (R-410A if not stated). Also pass the target range for that value from the sources as \
+    targetRange, both ends (e.g. "8 to 12"). The tool's Result sentence already says whether the value is within, below or above \
+    the target and what that means: repeat that conclusion as given - never re-compare the numbers yourself - and \
+    then say what to check or do next, in light of the work order and the conversation.
+    """
+
+    /// Tokens held back for the model's reply when measuring context.
+    static let answerReserveTokens = 700
+
+    static func contextBlock(for sources: [SearchResult]) -> String {
+        var block = ""
+        for (i, chunk) in sources.enumerated() {
+            if chunk.page == 0 && !chunk.isFieldNote {
+                // The job briefing (reported issue + history), not a manual.
+                block += """
+                --- SOURCE \(i + 1) (\(chunk.manualTitle.uppercased()) - the job you are on, not a manual) ---
+                Content: \(chunk.text)
+
+                """
+            } else if chunk.isFieldNote {
+                block += """
+                --- SOURCE \(i + 1) (SHARED FIELD NOTE from technician \(chunk.fieldNoteAuthor ?? "unknown"), not from a manual) ---
+                Content: \(chunk.text)
+
+                """
+            } else {
+                block += """
+                --- SOURCE \(i + 1) ---
+                Manual: \(chunk.manualTitle)
+                Section: \(chunk.section)
+                Page: \(chunk.page)
+                Content: \(chunk.text)
+
+                """
+            }
+        }
+        return block
+    }
+
+    /// The whole conversation since the last compaction. There is no fixed
+    /// turn cap any more: ChatEngine measures the prompt against the model's
+    /// context window and compacts (or, as a last resort, trims) to fit.
+    static func historyBlock(for conversation: [ConversationTurn]) -> String {
+        guard !conversation.isEmpty else { return "" }
+        var block = "Conversation so far:\n"
+        for turn in conversation {
+            let speaker = turn.isSummary ? "Summary of earlier conversation" : (turn.isUser ? "Technician" : "Assistant")
+            block += "\(speaker): \(turn.text)\n"
+        }
+        return block + "\n"
+    }
+
+    // MARK: - Compaction
+
+    /// Separate fields keep "the assistant suggested X" from turning into
+    /// "the tech did X" — prose summaries from a small model blur the two.
+    @Generable(description: "Facts from a technician's chat, sorted by who said them")
+    struct CompactSummary {
+        @Guide(description: "The unit or equipment and its model, if mentioned. Empty string if not.")
+        var equipment: String
+        @Guide(description: "Symptoms and fault codes the technician reported")
+        var symptoms: [String]
+        @Guide(description: "Every measured reading or computed value with its number and unit, e.g. 'superheat 3.2°F'")
+        var readings: [String]
+        @Guide(description: "Checks or causes the ASSISTANT suggested. Not things the technician did.")
+        var assistantSuggested: [String]
+        @Guide(description: "Work the TECHNICIAN explicitly said they did or found. Empty if they reported none.")
+        var technicianDid: [String]
+        @Guide(description: "Questions still unresolved")
+        var openQuestions: [String]
+
+        var text: String {
+            var parts: [String] = []
+            if !equipment.isEmpty { parts.append("Unit: \(equipment).") }
+            func add(_ label: String, _ items: [String]) {
+                let clean = items.map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }.filter { !$0.isEmpty }
+                if !clean.isEmpty { parts.append("\(label): \(clean.joined(separator: "; ")).") }
+            }
+            add("Symptoms", symptoms)
+            add("Readings", readings)
+            add("Assistant suggested", assistantSuggested)
+            add("Technician did", technicianDid)
+            add("Open", openQuestions)
+            return parts.joined(separator: " ")
+        }
+    }
+
+    /// Condenses older turns into a short running memory. Uses the selected
+    /// backend, falling back to the Foundation model.
+    static func summarize(_ turns: [ConversationTurn], preferredBackend: ModelBackend) async throws -> String {
+        let instructions = """
+        You condense a field technician's chat with an assistant into a short memory note the assistant will rely on later. \
+        Keep: the equipment and unit, symptoms and fault codes, every measured reading with its number and unit, conclusions \
+        reached, fixes tried or found, and open questions. Use ONLY facts stated in the conversation: never add checks, \
+        results or conclusions nobody stated - if something was only suggested, say it was suggested. \
+        Drop pleasantries and citations. Write 2-5 plain sentences.
+        """
+        // Per-turn cap keeps the request itself inside the smallest window.
+        let transcript = turns.map { turn in
+            let speaker = turn.isSummary ? "Earlier summary" : (turn.isUser ? "Technician" : "Assistant")
+            return "\(speaker): \(turn.text.prefix(700))"
+        }.joined(separator: "\n")
+        let prompt = "Conversation to condense:\n\(transcript)"
+
+        if preferredBackend == .qwen,
+           let text = try? await QwenLLMService.shared.generate(instructions: instructions, prompt: prompt, maxTokens: 300),
+           !text.isEmpty {
+            return text
+        }
+        if preferredBackend == .openAI,
+           let cloud = try? await openAIConverse(instructions: instructions, prompt: prompt) {
+            return cloud.text
+        }
+        guard SystemLanguageModel.default.availability == .available else { throw AIError.modelUnavailable }
+        let session = LanguageModelSession(instructions: instructions)
+        let response = try await session.respond(to: prompt, generating: CompactSummary.self,
+                                                  options: GenerationOptions(samplingMode: .greedy))
+        return response.content.text
+    }
+
     static func answerQuestion(
         _ question: String,
         context: [SearchResult],
@@ -236,59 +370,9 @@ enum AIService {
             onStatus?("\(activity.title): \(activity.result) — writing answer…")
             onToolCall?(activity)
         }
-        var contextBlock = ""
-        for (i, chunk) in sources.enumerated() {
-            if chunk.page == 0 && !chunk.isFieldNote {
-                // The job briefing (reported issue + history), not a manual.
-                contextBlock += """
-                --- SOURCE \(i + 1) (\(chunk.manualTitle.uppercased()) - the job you are on, not a manual) ---
-                Content: \(chunk.text)
-
-                """
-            } else if chunk.isFieldNote {
-                contextBlock += """
-                --- SOURCE \(i + 1) (SHARED FIELD NOTE from technician \(chunk.fieldNoteAuthor ?? "unknown"), not from a manual) ---
-                Content: \(chunk.text)
-
-                """
-            } else {
-                contextBlock += """
-                --- SOURCE \(i + 1) ---
-                Manual: \(chunk.manualTitle)
-                Section: \(chunk.section)
-                Page: \(chunk.page)
-                Content: \(chunk.text)
-
-                """
-            }
-        }
-
-        var historyBlock = ""
-        if !conversation.isEmpty {
-            historyBlock = "Conversation so far:\n"
-            for turn in conversation.suffix(8) {
-                historyBlock += "\(turn.isUser ? "Technician" : "Assistant"): \(turn.text)\n"
-            }
-            historyBlock += "\n"
-        }
-
-        let baseInstructions = """
-        You are a helpful field technician assistant. Answer the technician's latest message based on the provided source material and the conversation. \
-        Read every source carefully before answering - the most relevant source may appear at any position in the list. \
-        Technicians describe symptoms in everyday words; if a source describes a likely cause or fix for the symptom, \
-        explain it even when the source uses different wording than the question. \
-        Only say the information is not available when no source is plausibly related. \
-        Cite the manual name, section, and page number; cite shared field notes as field notes. Be concise and practical. \
-        Report which numbered sources you based the answer on. \
-        If the technician reports a fix they discovered that no source covers, acknowledge it. \
-        You have a refrigerantCalculator tool. Whenever the technician gives a pressure reading and asks about \
-        superheat, subcooling, saturation temperature, or whether the charge or readings are OK, call the tool \
-        first and use its numbers - never work out saturation temperatures yourself. When the technician gives a \
-        pressure AND a line temperature, always pass both: suction pressure + suction line temperature is superheat, \
-        head pressure + liquid line temperature is subcooling (which is how charge is verified). Use the unit's refrigerant \
-        from the work order (R-410A if not stated). Then compare the result to the target range in the sources \
-        and say plainly what it means and what to do next.
-        """
+        let contextBlock = contextBlock(for: sources)
+        let historyBlock = historyBlock(for: conversation)
+        let baseInstructions = answerInstructions
         // The cloud model handles the combined 4-field schema in one call.
         let instructions = baseInstructions
             + " If the technician reports a fix they discovered that no source covers, also produce a field note for it."
@@ -484,6 +568,55 @@ enum AIService {
         } catch {
             print("[AIService] Fix-check skipped (\(error))")
             return nil
+        }
+    }
+
+    @Generable(description: "Follow-up questions a technician might ask next")
+    struct FollowUps {
+        @Guide(description: "Short follow-up questions (under 12 words each) the technician is likely to ask next. Each must be answerable from the reference material shown. Questions only - no answers.", .count(2...3))
+        var questions: [String]
+    }
+
+    /// Fallback chips: 2-3 follow-ups grounded in the answer just given.
+    /// Always the Foundation model (it runs out of process, so it never
+    /// competes with Qwen for the app's memory); fail-soft, never blocks.
+    static func suggestFollowUps(question: String, answer: String, sources: [SearchResult]) async -> [String] {
+        guard SystemLanguageModel.default.availability == .available else { return [] }
+        let material = sources.prefix(4).map { s in
+            let head = s.isFieldNote ? "Field note by \(s.fieldNoteAuthor ?? "a tech")" : "\(s.manualTitle), \(s.section)"
+            return "- \(head): \(s.text.prefix(160))"
+        }.joined(separator: "\n")
+        let instructions = """
+        Suggest what an HVAC field technician would naturally ask next, based on the answer they just got and the \
+        reference material. Only suggest questions the reference material can answer. Don't repeat their question.
+        """
+        let prompt = """
+        Reference material:
+        \(material)
+
+        Technician asked: \(question)
+        Answer given: \(answer.prefix(500))
+        """
+        do {
+            return try await withThrowingTaskGroup(of: [String].self) { group in
+                group.addTask {
+                    let session = LanguageModelSession(instructions: instructions)
+                    let response = try await session.respond(to: prompt, generating: FollowUps.self,
+                                                             options: GenerationOptions(samplingMode: .greedy))
+                    return response.content.questions
+                        .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+                        .filter { $0.count > 8 && $0.hasSuffix("?") }
+                }
+                group.addTask {
+                    try await Task.sleep(for: .seconds(20))
+                    throw AIError.generationTimedOut
+                }
+                defer { group.cancelAll() }
+                return try await group.next() ?? []
+            }
+        } catch {
+            print("[AIService] Follow-ups skipped (\(error))")
+            return []
         }
     }
 

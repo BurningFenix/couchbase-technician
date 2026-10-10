@@ -42,6 +42,12 @@ final class ToolCallLog: @unchecked Sendable {
 
 // MARK: - Refrigerant calculator (deterministic)
 
+private func f1(_ v: Double) -> String { String(format: "%.1f", v) }
+private func range(_ lo: Double, _ hi: Double) -> String {
+    let f = { (v: Double) in v == v.rounded() ? String(Int(v)) : f1(v) }
+    return lo == hi ? "\(f(lo))°F" : "\(f(lo))-\(f(hi))°F"
+}
+
 /// Superheat / subcooling / saturation math against real pressure-temperature
 /// data. Small on-device models cannot do PT-chart lookups reliably, so the
 /// agent is given this as a tool and told never to estimate these itself.
@@ -58,6 +64,32 @@ enum RefrigerantCalculator {
         let lineTempF: Double?
         /// Superheat or subcooling in °F; nil for a plain saturation lookup.
         let value: Double?
+        /// Target range from the manual, as the model read it.
+        var targetMinF: Double? = nil
+        var targetMaxF: Double? = nil
+
+        /// Deterministic comparison against the target. Small models misjudge
+        /// "is 3.2 inside 8-12?" (observed: "3.2°F is within 8 to 12°F, no
+        /// action needed"), so the tool states the verdict outright.
+        var verdict: Verdict? {
+            guard let value, let lo = targetMinF ?? targetMaxF, let hi = targetMaxF ?? targetMinF else { return nil }
+            let (low, high) = (min(lo, hi), max(lo, hi))
+            if value < low { return .below(low - value, low, high) }
+            if value > high { return .above(value - high, low, high) }
+            return .within(low, high)
+        }
+
+        enum Verdict {
+            case within(Double, Double), below(Double, Double, Double), above(Double, Double, Double)
+
+            var short: String {
+                switch self {
+                case .within(let lo, let hi): "within \(range(lo, hi)) target"
+                case .below(let d, let lo, let hi): "\(f1(d))°F BELOW \(range(lo, hi)) target"
+                case .above(let d, let lo, let hi): "\(f1(d))°F ABOVE \(range(lo, hi)) target"
+                }
+            }
+        }
 
         /// Text handed back to the model as the tool output.
         var modelSummary: String {
@@ -66,9 +98,40 @@ enum RefrigerantCalculator {
             case .saturation:
                 return "\(refrigerant) at \(fmt(pressurePsig)) psig: saturation temperature \(sat)°F."
             case .superheat:
-                return "\(refrigerant) suction \(fmt(pressurePsig)) psig = \(sat)°F saturation. Suction line \(fmt(lineTempF ?? 0))°F. SUPERHEAT = \(String(format: "%.1f", value ?? 0))°F. Compare this against the target range and alarm thresholds in the sources."
+                return "\(refrigerant) suction \(fmt(pressurePsig)) psig = \(sat)°F saturation. Suction line \(fmt(lineTempF ?? 0))°F. SUPERHEAT = \(String(format: "%.1f", value ?? 0))°F.\(verdictSentence)"
             case .subcooling:
-                return "\(refrigerant) head/liquid \(fmt(pressurePsig)) psig = \(sat)°F saturation. Liquid line \(fmt(lineTempF ?? 0))°F. SUBCOOLING = \(String(format: "%.1f", value ?? 0))°F. Compare this against the target range in the sources."
+                return "\(refrigerant) head/liquid \(fmt(pressurePsig)) psig = \(sat)°F saturation. Liquid line \(fmt(lineTempF ?? 0))°F. SUBCOOLING = \(String(format: "%.1f", value ?? 0))°F.\(verdictSentence)"
+            }
+        }
+
+        private var verdictSentence: String {
+            guard let verdict else {
+                return " No target range was given; compare against the target range in the sources."
+            }
+            // A plain sentence the model can repeat as-is: raw "VERDICT:" tags
+            // and instructions in tool output got copied into answers verbatim.
+            let name = calculation == .superheat ? "Superheat" : "Subcooling"
+            let where_: String
+            switch verdict {
+            case .within(let lo, let hi): where_ = "is within the \(range(lo, hi)) target"
+            case .below(let d, let lo, let hi): where_ = "is \(f1(d))°F below the \(range(lo, hi)) target"
+            case .above(let d, let lo, let hi): where_ = "is \(f1(d))°F above the \(range(lo, hi)) target"
+            }
+            return " Result: \(name) of \(f1(value ?? 0))°F \(where_). \(meaningSentence ?? "")"
+        }
+
+        /// The textbook reading of an out-of-range value (matching the
+        /// AC-5000 manual §6.2-6.3). The model reliably got the direction
+        /// wrong on its own, e.g. "low superheat suggests undercharge".
+        private var meaningSentence: String? {
+            switch (calculation, verdict) {
+            case (.superheat, .below?): "Superheat too low: the evaporator is overfed, risking liquid floodback into the compressor."
+            case (.superheat, .above?): "Superheat too high: the evaporator is starved, usually an undercharge or a restricted/underfeeding metering device."
+            case (.subcooling, .below?): "Subcooling too low: points to an undercharge."
+            case (.subcooling, .above?): "Subcooling too high: points to an overcharge or a liquid-line restriction."
+            case (.superheat, .within?): "Superheat is in range, so the metering device is feeding correctly."
+            case (.subcooling, .within?): "Subcooling is in range, so the refrigerant charge is correct."
+            default: nil
             }
         }
 
@@ -80,10 +143,11 @@ enum RefrigerantCalculator {
             case .superheat: headline = "Superheat \(String(format: "%.1f", value ?? 0))°F"
             case .subcooling: headline = "Subcooling \(String(format: "%.1f", value ?? 0))°F"
             }
+            let verdictLine = verdict.map { " · \($0.short)" } ?? ""
             return ToolActivity(
                 title: "Refrigerant calculator",
                 inputs: "\(refrigerant) · \(fmt(pressurePsig)) psig → \(String(format: "%.1f", saturationTempF))°F sat\(line)",
-                result: headline)
+                result: headline + verdictLine)
         }
 
         private func fmt(_ v: Double) -> String {
@@ -110,8 +174,24 @@ enum RefrigerantCalculator {
 
     static let supported = ["R-410A", "R-22", "R-32", "R-134a"]
 
+    /// Parses the target the model copied from the manual: "8 to 12",
+    /// "10-14°F", "12". A single value (a nameplate figure) gets ±2°F.
+    /// One text field is used because the small model reliably filled only
+    /// one of two separate min/max number fields.
+    static func parseTarget(_ text: String?) -> (Double, Double)? {
+        guard let text else { return nil }
+        let nums = text.split(whereSeparator: { !($0.isNumber || $0 == ".") }).compactMap { Double($0) }
+        switch nums.count {
+        case 0: return nil
+        case 1: return (nums[0] - 2, nums[0] + 2)
+        default: return (min(nums[0], nums[1]), max(nums[0], nums[1]))
+        }
+    }
+
     static func compute(calculation: String, refrigerant: String, pressurePsig: Double,
-                        lineTemperatureF: Double?) throws -> Result {
+                        lineTemperatureF: Double?, targetRange: String? = nil) throws -> Result {
+        let target = parseTarget(targetRange)
+        let targetMinF = target?.0, targetMaxF = target?.1
         var calc = Calculation(rawValue: calculation.lowercased()) ?? .saturation
         let (name, table) = try lookup(refrigerant)
         let sat = try saturationTemperature(psig: pressurePsig, table: table)
@@ -134,7 +214,8 @@ enum RefrigerantCalculator {
             value = sat - line
         }
         return Result(calculation: calc, refrigerant: name, pressurePsig: pressurePsig,
-                      saturationTempF: sat, lineTempF: lineTemperatureF, value: value)
+                      saturationTempF: sat, lineTempF: lineTemperatureF, value: value,
+                      targetMinF: targetMinF, targetMaxF: targetMaxF)
     }
 
     /// Accepts "R410A", "r-410a", "410A", "Puron"…; blank defaults to R-410A,
@@ -222,11 +303,13 @@ enum AgentTools {
 
     /// Shared by every backend so all of them log and report identically.
     static func runCalculator(calculation: String, refrigerant: String, pressurePsig: Double,
-                              lineTemperatureF: Double?, log: ToolCallLog) -> String {
+                              lineTemperatureF: Double?, targetRange: String? = nil,
+                              log: ToolCallLog) -> String {
         do {
             let result = try RefrigerantCalculator.compute(
                 calculation: calculation, refrigerant: refrigerant,
-                pressurePsig: pressurePsig, lineTemperatureF: lineTemperatureF)
+                pressurePsig: pressurePsig, lineTemperatureF: lineTemperatureF,
+                targetRange: targetRange)
             log.record(result.activity)
             print("[AgentTools] \(result.modelSummary)")
             return result.modelSummary
@@ -253,6 +336,8 @@ enum AgentTools {
             var pressurePsig: Double
             @Guide(description: "Measured line temperature in °F (suction line for superheat, liquid line for subcooling). 0 for a saturation lookup.")
             var lineTemperatureF: Double
+            @Guide(description: "The target range for this value copied from the manual sources, both ends, e.g. '8 to 12' for '8 to 12°F superheat'. Empty string if the sources give none.")
+            var targetRange: String
         }
 
         func call(arguments: Arguments) async throws -> String {
@@ -260,6 +345,7 @@ enum AgentTools {
                 calculation: arguments.calculation, refrigerant: arguments.refrigerant,
                 pressurePsig: arguments.pressurePsig,
                 lineTemperatureF: arguments.calculation == "saturation" ? nil : arguments.lineTemperatureF,
+                targetRange: arguments.targetRange,
                 log: log)
         }
     }
@@ -284,6 +370,7 @@ enum AgentTools {
                     ] as [String: any Sendable],
                     "pressurePsig": ["type": "number", "description": "Gauge pressure in psig"] as [String: any Sendable],
                     "lineTemperatureF": ["type": "number", "description": "Measured line temperature in °F"] as [String: any Sendable],
+                    "targetRange": ["type": "string", "description": "Target range for this value copied from the manual, both ends, e.g. '8 to 12'"] as [String: any Sendable],
                 ] as [String: any Sendable],
                 "required": ["calculation", "refrigerant", "pressurePsig"],
             ] as [String: any Sendable],
@@ -310,6 +397,7 @@ enum AgentTools {
             refrigerant: arguments["refrigerant"] as? String ?? "R-410A",
             pressurePsig: pressure,
             lineTemperatureF: number("lineTemperatureF"),
+            targetRange: arguments["targetRange"].map { "\($0)" },
             log: log)
     }
 }

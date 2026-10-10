@@ -14,7 +14,9 @@ enum DemoUser: String, CaseIterable, Identifiable {
 }
 
 struct ChatMessage: Identifiable {
-    enum Role { case user, bot }
+    /// `.compaction` marks where older turns were summarized: its `text` is
+    /// the summary, and the model sees it instead of everything before it.
+    enum Role { case user, bot, compaction }
 
     let id = UUID()
     var role: Role
@@ -33,8 +35,11 @@ struct ChatMessage: Identifiable {
     var backend: AIService.ModelBackend = .onDevice
     /// Tools the agent ran for this answer (shown as cards above it).
     var toolCalls: [ToolActivity] = []
+    /// For a compaction marker: how many turns the summary replaces.
+    var compactedTurns: Int = 0
 
     var isUser: Bool { role == .user }
+    var isCompaction: Bool { role == .compaction }
 }
 
 /// Conversation state for the Ask tab: multi-turn RAG over the manuals
@@ -70,6 +75,15 @@ final class ChatEngine {
     private(set) var activeJob: Job?
     /// The bot message currently offering Complete/Skip buttons.
     private(set) var pendingJobCompletionMessageId: UUID?
+    /// Context-window fill for the NEXT question (drives the ring).
+    private(set) var contextUsage: ContextUsage?
+    private(set) var isCompacting = false
+    /// Tokens the most recent compaction freed (popover confirmation).
+    private(set) var lastCompactionFreed: Int?
+    /// Sources behind each tech's latest answer: the best estimate of what
+    /// the next question's manual excerpts will cost.
+    private var lastSources: [DemoUser: [SearchResult]] = [:]
+    private var usageTask: Task<Void, Never>?
 
     var activeUser: DemoUser {
         get {
@@ -77,6 +91,7 @@ final class ChatEngine {
         }
         set {
             UserDefaults.standard.set(newValue.rawValue, forKey: "activeUser")
+            contextDidChange()
         }
     }
 
@@ -95,32 +110,179 @@ final class ChatEngine {
 
     func attach(_ dbManager: DatabaseManager) {
         self.dbManager = dbManager
+        contextDidChange()
+    }
+
+    // MARK: - Context window
+
+    /// The model's view of a conversation: the latest compaction summary (if
+    /// any) followed by every turn after it.
+    private func history(from msgs: [ChatMessage]) -> (turns: [AIService.ConversationTurn], summarized: Int, live: Int) {
+        var turns: [AIService.ConversationTurn] = []
+        var start = msgs.startIndex
+        var summarized = 0
+        if let marker = msgs.lastIndex(where: \.isCompaction) {
+            turns.append(.init(isUser: false, text: msgs[marker].text, isSummary: true))
+            summarized = msgs[marker].compactedTurns
+            start = marker + 1
+        }
+        let live = msgs[start...].filter { !$0.isCompaction }
+        turns += live.map { .init(isUser: $0.isUser, text: $0.text) }
+        return (turns, summarized, live.count)
+    }
+
+    /// Re-measures the ring in the background (cheap; safe to call often).
+    func refreshContextUsage() {
+        usageTask?.cancel()
+        usageTask = Task { await updateContextUsage() }
+    }
+
+    private func updateContextUsage() async {
+        let user = activeUser
+        let h = history(from: conversations[user] ?? [])
+        let usage = await ContextMeter.measure(
+            backend: preferredBackend,
+            workOrder: activeJob.map(jobBriefing),
+            sources: lastSources[user] ?? [],
+            conversation: h.turns,
+            summaryTurns: h.summarized,
+            liveTurns: h.live)
+        guard !Task.isCancelled, user == activeUser else { return }
+        contextUsage = usage
+    }
+
+    /// At least one full exchange sits between the last compaction and the
+    /// latest question (which always stays verbatim).
+    var canCompact: Bool {
+        guard !isTyping, !isCompacting else { return false }
+        let msgs = messages
+        let start = msgs.lastIndex(where: \.isCompaction).map { $0 + 1 } ?? 0
+        guard let keepFrom = msgs.lastIndex(where: \.isUser), keepFrom > start else { return false }
+        return msgs[start..<keepFrom].filter { !$0.isCompaction }.count >= 2
+    }
+
+    /// Summarizes everything before the latest exchange into one marker.
+    /// The latest question and answer stay verbatim so the thread reads
+    /// naturally; a previous summary is folded into the new one.
+    func compact() async {
+        guard !isCompacting else { return }
+        let user = activeUser
+        let msgs = conversations[user] ?? []
+        let start = msgs.lastIndex(where: \.isCompaction).map { $0 + 1 } ?? 0
+        guard let keepFrom = msgs.lastIndex(where: \.isUser), keepFrom > start else { return }
+        let older = msgs[start..<keepFrom].filter { !$0.isCompaction }
+        guard older.count >= 2 else { return }
+
+        var input = history(from: Array(msgs[..<start])).turns.filter(\.isSummary)
+        input += older.map { .init(isUser: $0.isUser, text: $0.text) }
+        let previouslySummarized = start > 0 ? msgs[start - 1].compactedTurns : 0
+        let before = contextUsage?.conversationTokens ?? 0
+
+        isCompacting = true
+        lastCompactionFreed = nil
+        defer { isCompacting = false }
+        do {
+            let summary = try await AIService.summarize(input, preferredBackend: preferredBackend)
+            guard !summary.isEmpty, var current = conversations[user],
+                  let insertAt = current.firstIndex(where: { $0.id == msgs[keepFrom].id }) else { return }
+            var marker = ChatMessage(role: .compaction, text: summary)
+            marker.compactedTurns = previouslySummarized + older.count
+            current.insert(marker, at: insertAt)
+            conversations[user] = current
+            await updateContextUsage()
+            lastCompactionFreed = max(0, before - (contextUsage?.conversationTokens ?? before))
+        } catch {
+            print("[ChatEngine] Compaction failed: \(error)")
+        }
+    }
+
+    /// Last-resort guard: if even after compaction the prompt would not fit
+    /// (auto-compact off, or one enormous turn), drop the oldest live turns.
+    private func fitToWindow(_ turns: [AIService.ConversationTurn], question: String,
+                             workOrder: SearchResult?, sources: [SearchResult]) async -> [AIService.ConversationTurn] {
+        var turns = turns
+        let limit = ContextMeter.limit(for: preferredBackend)
+        while true {
+            let usage = await ContextMeter.measure(
+                backend: preferredBackend, workOrder: workOrder, sources: sources,
+                conversation: turns + [.init(isUser: true, text: question)],
+                summaryTurns: 0, liveTurns: turns.count)
+            guard usage.total > limit,
+                  let oldest = turns.firstIndex(where: { !$0.isSummary }) else { return turns }
+            print("[ChatEngine] Prompt over the \(limit)-token window (\(usage.total)); dropping oldest turn")
+            turns.remove(at: oldest)
+        }
     }
 
     var messages: [ChatMessage] { conversations[activeUser] ?? [] }
 
-    var suggestions: [String] {
-        // In a job chat, walk the tech through the scripted questions one at
-        // a time (first question, then the follow-up), then hand off to the
-        // Complete/Skip buttons.
-        if let job = activeJob, let prompts = job.demoPrompts {
-            let asked = (conversations[activeUser] ?? []).filter(\.isUser).count
-            return asked < prompts.count ? [prompts[asked]] : []
+    /// Suggested-prompt chips, rebuilt whenever the job, chat or user
+    /// changes (see `SuggestionEngine` for the rules).
+    private(set) var suggestions: [Suggestion] = []
+
+    /// Model-written follow-ups for each tech's latest answer (fallback chips).
+    private var aiFollowUps: [DemoUser: [String]] = [:]
+    /// Retrieval check results, keyed by model + question text.
+    private var answerableCache: [String: Bool] = [:]
+    private var suggestionTask: Task<Void, Never>?
+
+    /// Recomputes the chips from live data: the work order is re-read so
+    /// checklist ticks made on the job screen count, and synced field notes
+    /// from other techs are picked up. Chips that depend on the manuals are
+    /// search-checked first, so the row never offers a dead end.
+    func refreshSuggestions() {
+        let user = activeUser
+        let msgs = conversations[user] ?? []
+        let asked = msgs.filter(\.isUser).map(\.text)
+        var job = activeJob
+        if let id = job?.id, let latest = try? dbManager?.job(id: id) { job = latest }
+        // Demo work orders still walk through their scripted questions first.
+        let scripted = job?.demoPrompts.flatMap { asked.count < $0.count ? $0[asked.count] : nil }
+        let model = job?.assetModel ?? assetContext?.model
+        let context = SuggestionContext(
+            job: job,
+            assetModel: model,
+            part: job?.requiredPart.flatMap { try? dbManager?.part(withNumber: $0) },
+            serviceHistory: job.flatMap { try? dbManager?.serviceHistory(forAssetTag: $0.assetTag) } ?? [],
+            fieldNotes: (try? dbManager?.recentFieldNotes(forAssetModel: model)) ?? [],
+            viewer: user.displayName,
+            askedQuestions: asked,
+            lastAnswer: msgs.last(where: { $0.role == .bot })?.text,
+            fixReported: msgs.contains(where: \.savedNote),
+            aiFollowUps: aiFollowUps[user] ?? [],
+            scriptedPrompt: scripted)
+        let candidates = SuggestionEngine.candidates(for: context)
+
+        suggestionTask?.cancel()
+        suggestionTask = Task {
+            let chosen = await SuggestionEngine.select(candidates) { await self.isAnswerable($0.text, model: model) }
+            guard !Task.isCancelled, user == activeUser else { return }
+            suggestions = chosen
         }
-        if messages.isEmpty {
-            return [
-                // Demo beat: asked as the OTHER tech, this surfaces the field
-                // note saved during the WO-4821 story.
-                "The AC-5000 is latching E11 again — anything I should know?",
-                "R-410A unit: suction is 118 psig and the suction line is 43°F. What's my superheat?",
-                "There's a damp, musty smell when the AC first starts cooling. Any idea why?",
-            ]
-        }
-        return [
-            "Head pressure is 365 psig and the liquid line is 98°F — what's my subcooling?",
-            "What should I keep an eye on around 380 psig?",
-            "Which unit takes 24x24x2 filters?",
-        ]
+    }
+
+    /// True when the manuals or field notes hold something close enough to
+    /// answer `question` (see `SuggestionEngine.deadEndDistance`). Fails open:
+    /// if the check itself can't run, the chip is kept.
+    private func isAnswerable(_ question: String, model: String?) async -> Bool {
+        let key = (model ?? "") + "|" + question
+        if let cached = answerableCache[key] { return cached }
+        guard let dbManager,
+              let vector = try? await EmbeddingService.shared.embedQuery(question),
+              let pool = try? dbManager.rankedSearch(queryVector: vector, queryText: question, assetModel: model)
+        else { return true }
+        let nearest = pool.compactMap(\.result.distance).min() ?? 1
+        let answerable = nearest <= SuggestionEngine.deadEndDistance
+        if !answerable { print("[ChatEngine] Dropped dead-end suggestion (distance \(String(format: "%.2f", nearest))): \(question)") }
+        answerableCache[key] = answerable
+        return answerable
+    }
+
+    /// The job, conversation or user changed: update everything derived
+    /// from them.
+    private func contextDidChange() {
+        refreshContextUsage()
+        refreshSuggestions()
     }
 
     /// Begins a fresh, job-focused chat from a work-order screen: clears the
@@ -132,6 +294,9 @@ final class ChatEngine {
         pendingJobCompletionMessageId = nil
         activeJob = job
         assetContext = (label: "\(job.workOrderNumber) · \(job.title)", model: job.assetModel)
+        lastSources[user] = nil
+        aiFollowUps[user] = nil
+        contextDidChange()
     }
 
     /// Clears the asset/job context chip and any pending completion buttons.
@@ -139,6 +304,7 @@ final class ChatEngine {
         assetContext = nil
         activeJob = nil
         pendingJobCompletionMessageId = nil
+        contextDidChange()
     }
 
     /// Marks the active work order complete and confirms in the chat.
@@ -155,6 +321,7 @@ final class ChatEngine {
         conversations[activeUser, default: []].append(
             ChatMessage(role: .bot, text: "✅ Done — I've marked \(wo) complete and signed you off. It'll show under Completed on your Work tab.")
         )
+        contextDidChange()
     }
 
     /// Dismisses the Complete/Skip buttons without completing (the tech can
@@ -222,11 +389,18 @@ final class ChatEngine {
         conversations[user, default: []].append(ChatMessage(role: .user, text: trimmed))
         isTyping = true
 
+        lastCompactionFreed = nil
+        aiFollowUps[user] = nil  // they belonged to the previous answer
+
         Task {
             do {
-                let history = Array((conversations[user] ?? []).dropLast().map {
-                    AIService.ConversationTurn(isUser: $0.isUser, text: $0.text)
-                })
+                // Auto-compact BEFORE this question is sent, never mid-answer.
+                if ContextMeter.autoCompactEnabled,
+                   let usage = contextUsage, usage.fraction >= ContextMeter.autoCompactThreshold {
+                    statusText = "Compacting conversation to make room…"
+                    await compact()
+                }
+                var history = self.history(from: Array((conversations[user] ?? []).dropLast())).turns
 
                 // Route before retrieving: greetings and chit-chat get a
                 // direct reply; follow-ups get rewritten into standalone
@@ -255,6 +429,7 @@ final class ChatEngine {
                     conversations[user, default: []].append(bot)
                     isTyping = false
                     statusText = nil
+                    contextDidChange()
                     return
                 }
 
@@ -270,14 +445,17 @@ final class ChatEngine {
                 let tokens = Set(SearchTokenizer.tokens(from: searchQuery))
                 let top = top5(pool, mode: mode)
 
-                statusText = "Reading sources & writing your answer…"
-                streamingBotId = nil
-                liveToolCalls = []
                 // In a job chat, lead the context with the work-order briefing
                 // (reported issue + recent service) so the answer is grounded
                 // in this specific job, not just the manuals.
+                let briefing = activeJob.map(jobBriefing)
+                history = await fitToWindow(history, question: trimmed, workOrder: briefing, sources: top.map(\.result))
+
+                statusText = "Reading sources & writing your answer…"
+                streamingBotId = nil
+                liveToolCalls = []
                 var contextResults = top.map(\.result)
-                if let job = activeJob { contextResults.insert(jobBriefing(job), at: 0) }
+                if let briefing { contextResults.insert(briefing, at: 0) }
                 // detectFixes:false — the field-note check is a second serial
                 // model call, so we defer it (below) and show the answer first.
                 // onPartial streams the answer token by token into the bubble.
@@ -287,18 +465,20 @@ final class ChatEngine {
                     conversation: history,
                     preferredBackend: preferredBackend,
                     detectFixes: false,
-                    onStatus: { [weak self] status in
+                    // The enclosing Task already holds self strongly (and the
+                    // engine lives for the app), so these capture it directly.
+                    onStatus: { status in
                         Task { @MainActor in
                             // Status only shows before the first token lands.
-                            guard let self, self.streamingBotId == nil else { return }
+                            guard self.streamingBotId == nil else { return }
                             self.statusText = status
                         }
                     },
-                    onPartial: { [weak self] partial in
-                        Task { @MainActor in self?.streamPartial(partial, user: user, question: trimmed) }
+                    onPartial: { partial in
+                        Task { @MainActor in self.streamPartial(partial, user: user, question: trimmed) }
                     },
-                    onToolCall: { [weak self] activity in
-                        Task { @MainActor in self?.liveToolCalls.append(activity) }
+                    onToolCall: { activity in
+                        Task { @MainActor in self.liveToolCalls.append(activity) }
                     }
                 )
 
@@ -354,10 +534,16 @@ final class ChatEngine {
                 isTyping = false
                 statusText = nil
                 if offerCompletion { pendingJobCompletionMessageId = botId }
+                lastSources[user] = top.map(\.result)
+                contextDidChange()
 
                 // Answer is on screen; now run the deferred novel-fix check,
                 // comparing the tech's message against the answer we just gave.
                 await detectAndSaveFix(question: trimmed, answer: answer.text, sources: top.map(\.result), user: user, botId: botId)
+                // Then fallback follow-up chips, also off the critical path.
+                aiFollowUps[user] = await AIService.suggestFollowUps(
+                    question: trimmed, answer: answer.text, sources: top.map(\.result))
+                refreshSuggestions()
                 return
             } catch {
                 print("[ChatEngine] Error: \(error)")
@@ -413,6 +599,7 @@ final class ChatEngine {
                 createdAt: ISO8601DateFormatter().string(from: Date())
             )
             try dbManager.saveFieldNote(note, embedding: noteVector)
+            answerableCache = [:]  // a new note can make questions answerable
             if let idx = conversations[user]?.firstIndex(where: { $0.id == botId }) {
                 conversations[user]?[idx].savedNote = true
                 conversations[user]?[idx].text += Self.savedNoteConfirmation
@@ -443,9 +630,7 @@ final class ChatEngine {
         isRerunning = true
         Task {
             do {
-                let history = (conversations[user] ?? []).prefix(upTo: max(0, idx - 1)).map {
-                    AIService.ConversationTurn(isUser: $0.isUser, text: $0.text)
-                }
+                let history = self.history(from: Array((conversations[user] ?? []).prefix(upTo: max(0, idx - 1)))).turns
                 let top = top5(msg.rankedPool, mode: newMode)
                 // A mode switch only re-ranks and re-answers; the field note
                 // was already detected and saved on the original send, so skip
@@ -453,7 +638,7 @@ final class ChatEngine {
                 let answer = try await AIService.answerQuestion(
                     msg.question,
                     context: top.map(\.result),
-                    conversation: Array(history),
+                    conversation: history,
                     preferredBackend: preferredBackend,
                     detectFixes: false
                 )
@@ -475,15 +660,15 @@ final class ChatEngine {
         qwenLoadError = nil
         Task {
             do {
-                try await QwenLLMService.shared.load { [weak self] update in
+                try await QwenLLMService.shared.load { update in
                     Task { @MainActor in
-                        guard let self else { return }
                         // Callback fires ~10×/s; only publish real changes.
                         if self.qwenStatus != update.message { self.qwenStatus = update.message }
                         if self.qwenProgress != update.fraction { self.qwenProgress = update.fraction }
                     }
                 }
                 qwenReady = true
+                refreshContextUsage()  // Qwen's tokenizer now gives exact counts
             } catch {
                 // Leave qwenReady false so a retry re-attempts the load;
                 // answers meanwhile fall back to the Foundation model.
@@ -497,9 +682,14 @@ final class ChatEngine {
 
     func resetDemo() {
         conversations = [:]
+        lastSources = [:]
+        aiFollowUps = [:]
+        answerableCache = [:]
+        lastCompactionFreed = nil
         assetContext = nil
         activeJob = nil
         pendingJobCompletionMessageId = nil
         try? dbManager?.deleteAllFieldNotes()
+        contextDidChange()
     }
 }

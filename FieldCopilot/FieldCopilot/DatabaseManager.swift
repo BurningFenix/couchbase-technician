@@ -461,6 +461,28 @@ final class DatabaseManager {
         Int(collections["fieldNotes"]?.count ?? 0)
     }
 
+    /// Newest field notes, for one equipment model or (nil) all of them.
+    /// Built field-by-field: the stored documents carry no "id" key, so the
+    /// generic Codable reader can't decode them.
+    func recentFieldNotes(forAssetModel model: String?, limit: Int = 3) throws -> [FieldNote] {
+        guard let db = database else { return [] }
+        let filter = model == nil ? "" : "WHERE assetModel = $model "
+        let q = try db.createQuery(
+            "SELECT META().id AS docid, text, author, assetModel, createdAt FROM field.fieldNotes \(filter)ORDER BY createdAt DESC LIMIT \(limit)")
+        if let model {
+            let params = Parameters()
+            params.setString(model, forName: "model")
+            q.parameters = params
+        }
+        return try q.execute().compactMap { row in
+            guard let id = row.string(forKey: "docid"), let text = row.string(forKey: "text") else { return nil }
+            return FieldNote(id: id, text: text,
+                             author: row.string(forKey: "author") ?? "a tech",
+                             assetModel: row.string(forKey: "assetModel") ?? "General",
+                             createdAt: row.string(forKey: "createdAt") ?? "")
+        }
+    }
+
     func deleteAllFieldNotes() throws {
         guard let db = database, let col = collections["fieldNotes"] else { return }
         let q = try db.createQuery("SELECT META().id AS docid FROM field.fieldNotes")

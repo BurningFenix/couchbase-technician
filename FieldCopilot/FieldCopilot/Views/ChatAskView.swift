@@ -6,6 +6,8 @@ struct ChatAskView: View {
     @Environment(ChatEngine.self) private var engine
     @State private var draft = ""
     @State private var sourcesFor: ChatMessage?
+    /// Messages before the latest compaction are collapsed unless expanded.
+    @State private var showEarlier = false
     @FocusState private var inputFocused: Bool
     @AppStorage("modelBackend") private var modelBackendRaw = AIService.ModelBackend.onDevice.rawValue
 
@@ -34,6 +36,8 @@ struct ChatAskView: View {
             .sheet(item: $sourcesFor) { message in
                 SourcesSheet(messageId: message.id)
             }
+            // Checklist ticks on the job screen change what's suggested.
+            .onAppear { engine.refreshSuggestions() }
         }
     }
 
@@ -89,16 +93,31 @@ struct ChatAskView: View {
                             .padding(.top, 80)
                     }
 
-                    ForEach(engine.messages) { message in
-                        MessageRow(
-                            message: message,
-                            viewer: engine.activeUser.displayName,
-                            showJobActions: message.id == engine.pendingJobCompletionMessageId,
-                            openSources: { sourcesFor = message },
-                            onComplete: { engine.completeActiveJob() },
-                            onSkip: { engine.dismissJobActions() }
-                        )
-                        .id(message.id)
+                    if hiddenCount > 0 {
+                        Button {
+                            withAnimation { showEarlier = true }
+                        } label: {
+                            Label("Show \(hiddenCount) earlier message\(hiddenCount == 1 ? "" : "s")", systemImage: "chevron.up")
+                                .font(.caption.weight(.semibold))
+                                .frame(minHeight: 44)
+                        }
+                    }
+
+                    ForEach(visibleMessages) { message in
+                        if message.isCompaction {
+                            CompactionCard(message: message)
+                                .id(message.id)
+                        } else {
+                            MessageRow(
+                                message: message,
+                                viewer: engine.activeUser.displayName,
+                                showJobActions: message.id == engine.pendingJobCompletionMessageId,
+                                openSources: { sourcesFor = message },
+                                onComplete: { engine.completeActiveJob() },
+                                onSkip: { engine.dismissJobActions() }
+                            )
+                            .id(message.id)
+                        }
                     }
 
                     if engine.isTyping {
@@ -120,6 +139,7 @@ struct ChatAskView: View {
                 .padding(16)
             }
             .scrollDismissesKeyboard(.interactively)
+            .onChange(of: latestCompactionIndex) { showEarlier = false }
             .onChange(of: engine.messages.count) {
                 withAnimation {
                     proxy.scrollTo(engine.messages.last?.id, anchor: .bottom)
@@ -173,37 +193,35 @@ struct ChatAskView: View {
                 .padding(.horizontal, 4)
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
-                        ForEach(engine.suggestions, id: \.self) { suggestion in
+                        ForEach(engine.suggestions) { suggestion in
                             Button {
-                                engine.send(suggestion)
+                                engine.send(suggestion.text)
                             } label: {
-                                Text(suggestion)
-                                    .font(.footnote)
-                                    .lineLimit(2)
-                                    .multilineTextAlignment(.leading)
-                                    .frame(maxWidth: 250, alignment: .leading)
-                                    .padding(.horizontal, 13)
-                                    .padding(.vertical, 9)
-                                    .background(.indigo.opacity(0.13), in: RoundedRectangle(cornerRadius: 16))
-                                    .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.indigo.opacity(0.35), lineWidth: 0.5))
+                                SuggestionChip(suggestion: suggestion)
                             }
                             .buttonStyle(.plain)
                             .foregroundStyle(.primary)
+                            .accessibilityHint("Sends this question")
                         }
                     }
                 }
             }
 
             HStack(alignment: .bottom, spacing: 10) {
-                TextField(engine.isTyping ? "Field Assist is typing…" : "Message Field Assist…",
-                          text: $draft, axis: .vertical)
-                    .lineLimit(1...5)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 10)
-                    .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
-                    .focused($inputFocused)
-                    // Return inserts a newline (its native behavior);
-                    // only the blue button submits.
+                HStack(alignment: .bottom, spacing: 0) {
+                    TextField(engine.isTyping ? "Field Assist is typing…" : "Message Field Assist…",
+                              text: $draft, axis: .vertical)
+                        .lineLimit(1...5)
+                        .padding(.leading, 14)
+                        .padding(.vertical, 10)
+                        .focused($inputFocused)
+                        // Return inserts a newline (its native behavior);
+                        // only the blue button submits.
+                    // How full the model's context window is; tap for
+                    // the breakdown and Compact.
+                    ContextRingButton()
+                }
+                .background(.regularMaterial, in: RoundedRectangle(cornerRadius: 22))
 
                 Button(action: send) {
                     Image(systemName: "arrow.up")
@@ -218,6 +236,20 @@ struct ChatAskView: View {
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)
+    }
+
+    private var latestCompactionIndex: Int? {
+        engine.messages.lastIndex(where: \.isCompaction)
+    }
+
+    /// Messages hidden behind "Show earlier": everything before the latest
+    /// compaction marker (the marker's summary card stands in for them).
+    private var hiddenCount: Int {
+        showEarlier ? 0 : (latestCompactionIndex ?? 0)
+    }
+
+    private var visibleMessages: [ChatMessage] {
+        Array(engine.messages.dropFirst(hiddenCount))
     }
 
     private var canSend: Bool {
@@ -295,11 +327,20 @@ private struct MessageRow: View {
     var onComplete: () -> Void = {}
     var onSkip: () -> Void = {}
 
+    /// Inline markdown (bold, italics, code) rendered rather than shown as
+    /// literal asterisks - Qwen in particular bolds key numbers.
+    private var renderedText: AttributedString {
+        (try? AttributedString(
+            markdown: message.text,
+            options: .init(interpretedSyntax: .inlineOnlyPreservingWhitespace)))
+            ?? AttributedString(message.text)
+    }
+
     var body: some View {
         VStack(alignment: message.isUser ? .trailing : .leading, spacing: 7) {
             ForEach(message.toolCalls) { ToolCallCard(activity: $0) }
 
-            Text(message.text)
+            Text(renderedText)
                 .font(.subheadline)
                 .padding(.horizontal, 15)
                 .padding(.vertical, 11)
@@ -578,5 +619,43 @@ struct ToolCallCard: View {
         .background(.indigo.opacity(0.10), in: RoundedRectangle(cornerRadius: 14))
         .overlay(RoundedRectangle(cornerRadius: 14).strokeBorder(.indigo.opacity(0.3), lineWidth: 0.5))
         .transition(.scale(scale: 0.95).combined(with: .opacity))
+    }
+}
+
+/// A suggested-prompt chip, with an icon saying where the idea came from.
+private struct SuggestionChip: View {
+    let suggestion: Suggestion
+
+    private var icon: String? {
+        switch suggestion.kind {
+        case .measure: "gauge.with.dots.needle.33percent"
+        case .howTo: "list.bullet.clipboard"
+        case .fault: "exclamationmark.triangle"
+        case .team: "person.2"
+        case .parts: "shippingbox"
+        case .history: "clock.arrow.circlepath"
+        case .closeOut: "checkmark.seal"
+        case .followUp: "sparkles"
+        case .script, .general: nil
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: 6) {
+            if let icon {
+                Image(systemName: icon)
+                    .font(.caption)
+                    .foregroundStyle(.indigo)
+            }
+            Text(suggestion.text)
+                .font(.footnote)
+                .lineLimit(2)
+                .multilineTextAlignment(.leading)
+        }
+        .frame(maxWidth: 250, alignment: .leading)
+        .padding(.horizontal, 13)
+        .padding(.vertical, 9)
+        .background(.indigo.opacity(0.13), in: RoundedRectangle(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(.indigo.opacity(0.35), lineWidth: 0.5))
     }
 }

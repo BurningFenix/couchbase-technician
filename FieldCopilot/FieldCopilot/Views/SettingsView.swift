@@ -69,6 +69,7 @@ struct SettingsView: View {
                     .pickerStyle(.segmented)
                     .onChange(of: modelBackendRaw) {
                         chatEngine.prewarmQwenIfNeeded()
+                        chatEngine.refreshContextUsage()
                     }
 
                     if let status = chatEngine.qwenStatus {

@@ -15,6 +15,11 @@ struct FieldCopilotApp: App {
                 .task {
                     chatEngine.attach(dbManager)
                 }
+                // Hand MLX's cached GPU buffers back before iOS has to
+                // terminate the app to reclaim memory.
+                .onReceive(NotificationCenter.default.publisher(for: UIApplication.didReceiveMemoryWarningNotification)) { _ in
+                    QwenLLMService.releaseCachedMemory()
+                }
         }
     }
 }

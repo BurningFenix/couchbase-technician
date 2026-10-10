@@ -1,4 +1,5 @@
 import Foundation
+import MLX
 import MLXHuggingFace
 import MLXLLM
 import MLXLMCommon
@@ -24,6 +25,10 @@ actor QwenLLMService {
     static let modelRevision = "c229db37d5e00db8bbbe9a5a61f95964637fc226"
     static let displayName = "Qwen3.5 4B"
     static let downloadSizeLabel = "~2.4 GB"
+    /// The model's full native window (`max_position_embeddings`). Only 8 of
+    /// its 32 layers are full attention, so the KV cache grows on those
+    /// alone - long chats are far cheaper than on a classic transformer.
+    static let contextSize = 262_144
 
     private var container: ModelContainer?
     private var loadTask: Task<Void, Error>?
@@ -31,6 +36,12 @@ actor QwenLLMService {
     private init() {}
 
     var isLoaded: Bool { container != nil }
+
+    /// Exact token count with Qwen's own tokenizer; nil until loaded.
+    func tokenCount(_ text: String) async -> Int? {
+        guard let container else { return nil }
+        return await container.encode(text).count
+    }
 
     /// True once the weights are fully on disk (only the load remains).
     static var isDownloaded: Bool {
@@ -68,7 +79,21 @@ actor QwenLLMService {
         }
     }
 
+    /// MLX keeps freed GPU buffers in a reuse cache that by default may grow
+    /// to its whole memory limit (1.5x the device's recommended working set).
+    /// On iPhone, every answer's KV cache and activations piled up there turn
+    /// after turn until iOS killed the app under CriticalMemoryPressure. A
+    /// small cap costs no measurable speed (MLX's own docs suggest ~MBs).
+    static let gpuCacheLimit = 32 * 1024 * 1024
+
+    /// Releases cached GPU buffers. Called after every generation and on
+    /// iOS memory warnings.
+    nonisolated static func releaseCachedMemory() {
+        Memory.clearCache()
+    }
+
     private func performLoad(onProgress: (@Sendable (LoadProgress) -> Void)?) async throws {
+        Memory.cacheLimit = Self.gpuCacheLimit
         let name = Self.displayName
         onProgress?(LoadProgress(message: "Preparing \(name)…", fraction: Self.isDownloaded ? nil : 0))
 
@@ -125,42 +150,69 @@ actor QwenLLMService {
         parameters.topK = 20
         parameters.presencePenalty = 1.5
         parameters.kvBits = 4
+        // Prompt is processed in chunks of this many tokens. 128 instead of
+        // the default 512 cut peak memory per answer from ~1.2 GB to ~0.5 GB
+        // above the weights, at no measurable speed cost (measured on M-series
+        // with a growing 6-turn chat).
+        parameters.prefillStepSize = 128
 
         let start = Date()
-        // Qwen3.5 dropped the "/no_think" soft switch; thinking is turned off
-        // through the chat template instead (it then emits an empty
-        // <think></think>, which stripThinking removes).
-        let session = ChatSession(
-            container, instructions: instructions, generateParameters: parameters,
-            additionalContext: ["enable_thinking": false],
-            tools: tools,
-            toolDispatch: toolDispatch.map { dispatch in
-                { @Sendable call in
-                    dispatch(call.function.name, call.function.arguments.mapValues(\.anyValue))
+        // Each round's session (KV cache + activations) is dropped when the
+        // round ends; hand that memory back instead of letting it pile up.
+        defer { Self.releaseCachedMemory() }
+
+        // Our own tool loop instead of ChatSession's `toolDispatch`. After a
+        // tool call, ChatSession continues by templating ONLY the tool-result
+        // message (leaning on its KV cache for the rest), and Qwen3.5's chat
+        // template rejects any message list without a user turn ("No user
+        // query found in messages") - so every Qwen tool call failed and the
+        // answer fell back to the Foundation model. Here each round is a
+        // fresh session given the WHOLE exchange: question, the assistant's
+        // tool call, and the tool's result.
+        var messages: [Chat.Message] = [.user(prompt)]
+        var text = ""
+        for round in 1...Self.maxToolRounds {
+            // Qwen3.5 dropped the "/no_think" soft switch; thinking is turned
+            // off through the chat template instead (it then emits an empty
+            // <think></think>, which stripThinking removes).
+            let session = ChatSession(
+                container, instructions: instructions, generateParameters: parameters,
+                additionalContext: ["enable_thinking": false],
+                tools: tools)
+
+            var raw = ""
+            var calls: [ToolCall] = []
+            for try await item in session.streamDetails(to: messages) {
+                switch item {
+                case .chunk(let chunk):
+                    raw += chunk
+                    let display = Self.stripThinking(raw)
+                    if !display.isEmpty { onPartial?(display) }
+                case .toolCall(let call):
+                    calls.append(call)
+                case .info:
+                    break
                 }
-            })
-        let fullPrompt = prompt
+            }
+            text = Self.stripThinking(raw)
 
-        // Without a partial-callback, one-shot; otherwise stream the chunks
-        // and emit the running text (with the <think> block stripped) for a
-        // live typewriter effect.
-        guard let onPartial else {
-            let raw = try await session.respond(to: fullPrompt)
-            let text = Self.stripThinking(raw)
-            print("[QwenLLMService] Generated \(text.count) chars in \(String(format: "%.1f", Date().timeIntervalSince(start)))s")
-            return text
+            // No tool call (or nowhere to dispatch it): this is the answer.
+            guard !calls.isEmpty, let toolDispatch, round < Self.maxToolRounds else { break }
+            messages.append(.assistant(text, toolCalls: calls))
+            for call in calls {
+                let result = toolDispatch(call.function.name, call.function.arguments.mapValues(\.anyValue))
+                messages.append(.tool(result, id: call.id))
+            }
+            print("[QwenLLMService] Round \(round): \(calls.count) tool call(s), continuing")
+            Self.releaseCachedMemory()
         }
-
-        var raw = ""
-        for try await chunk in session.streamResponse(to: fullPrompt) {
-            raw += chunk
-            let display = Self.stripThinking(raw)
-            if !display.isEmpty { onPartial(display) }
-        }
-        let text = Self.stripThinking(raw)
-        print("[QwenLLMService] Streamed \(text.count) chars in \(String(format: "%.1f", Date().timeIntervalSince(start)))s")
+        print("[QwenLLMService] Generated \(text.count) chars in \(String(format: "%.1f", Date().timeIntervalSince(start)))s")
         return text
     }
+
+    /// Generation passes per answer: tool calls then a final reply. A cap so
+    /// a model that keeps calling tools can't loop forever.
+    private static let maxToolRounds = 4
 
     /// Removes a leading <think>…</think> block if the model emits one.
     /// While streaming, an unterminated block is withheld entirely so the
